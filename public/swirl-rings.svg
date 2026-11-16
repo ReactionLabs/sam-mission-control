@@ -1,0 +1,19 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="480" height="480" viewBox="0 0 480 480">
+  <!-- SAM swirl field. Reusable brand pattern: concentric offset rings in the
+       Swinging London inks on Deep Purple. Brand surfaces only (sign-in,
+       empty-state bands, poster edges). Never behind text longer than a
+       headline (BIBLE.md sections 2 and 5). Tileable by cropping; the rings
+       are drawn oversize so any 480px window reads as field, not picture. -->
+  <rect width="480" height="480" fill="#392348"/>
+  <g fill="none" stroke-width="26">
+    <circle cx="212" cy="238" r="330" stroke="#E86C25"/>
+    <circle cx="212" cy="238" r="292" stroke="#D5AC40"/>
+    <circle cx="212" cy="238" r="254" stroke="#392348"/>
+    <circle cx="212" cy="238" r="216" stroke="#E86C25"/>
+    <circle cx="212" cy="238" r="178" stroke="#D5AC40"/>
+    <circle cx="212" cy="238" r="140" stroke="#4E5839"/>
+    <circle cx="212" cy="238" r="102" stroke="#E86C25"/>
+    <circle cx="212" cy="238" r="64"  stroke="#D5AC40"/>
+    <circle cx="212" cy="238" r="26"  stroke="#E86C25"/>
+  </g>
+</svg>
