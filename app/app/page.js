@@ -4,7 +4,7 @@ import { useCallback, useEffect, useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { api, getSession } from "../../lib/api";
-import AppBar from "../../components/AppBar";
+import AppShell from "../../components/AppShell";
 
 function fmtDate(iso) {
   try { return new Date(iso).toLocaleString(); } catch { return ""; }
@@ -62,9 +62,8 @@ export default function AccountHome() {
       : (!member.hasKey ? "SAM cannot think yet: SAM needs a key to think with. Add yours in Settings and SAM is ready." : null);
 
   return (
-    <>
-      <AppBar email={member.email} />
-      <div className="wrap" style={{ paddingBottom: 64 }}>
+    <AppShell email={member.email}>
+      <div className="wrap">
         <div style={{ display: "flex", alignItems: "baseline", gap: 16, flexWrap: "wrap", marginTop: 22 }}>
           <h1 className="display" style={{ fontSize: 38, margin: 0 }}>Mission Control</h1>
           <span className="dim">The Briefing Room</span>
@@ -103,7 +102,7 @@ export default function AccountHome() {
 
         {panels && (
           <div className="grid">
-            <div className="card">
+            <div className="card anchor-room" id="approvals">
               <div className="eyebrow">Approvals</div>
               <h3>Waiting on you {panels.approvals.length > 0 && <span className="badge">{panels.approvals.length}</span>}</h3>
               {panels.approvals.length === 0 && <p className="dim" style={{ marginBottom: 0 }}>Nothing is waiting. When SAM wants to do something that matters, it lands here first, in plain words.</p>}
@@ -120,7 +119,7 @@ export default function AccountHome() {
               ))}
             </div>
 
-            <div className="card">
+            <div className="card anchor-room" id="missions">
               <div className="eyebrow">Missions</div>
               <h3>Work in motion</h3>
               {panels.missions.length === 0 && <p className="dim" style={{ marginBottom: 0 }}>No missions running. Missions are bigger jobs SAM works on in the background.</p>}
@@ -131,7 +130,7 @@ export default function AccountHome() {
               </ul>
             </div>
 
-            <div className="card">
+            <div className="card anchor-room" id="intel">
               <div className="eyebrow">Intel Feed</div>
               <h3>What SAM has been doing</h3>
               {panels.intel.length === 0 && <p className="dim" style={{ marginBottom: 0 }}>Nothing yet. This feed is SAM's own activity record, written as it works.</p>}
@@ -142,7 +141,7 @@ export default function AccountHome() {
               </ul>
             </div>
 
-            <div className="card">
+            <div className="card anchor-room" id="memory">
               <div className="eyebrow">Memory Vault</div>
               <h3>The filing cabinet</h3>
               {panels.memory.length === 0 && <p className="dim" style={{ marginBottom: 0 }}>Nothing filed yet. As you and SAM work, the things worth keeping land here.</p>}
@@ -159,16 +158,18 @@ export default function AccountHome() {
                   <li key={a.id}><strong>{a.title}</strong> <span className="dim small">({a.kind}, version {a.version})</span></li>
                 ))}
               </ul>
-              <div className="eyebrow" style={{ marginTop: 18 }}>Tools</div>
-              <h3>Quartermaster's Desk</h3>
-              {panels.skills.length === 0 && <p className="dim" style={{ marginBottom: 0 }}>No extra tools installed yet.</p>}
-              <ul className="list">
-                {panels.skills.map((s) => (<li key={s.name}>{s.name} <span className="dim small">from {s.source}</span></li>))}
-              </ul>
+              <div id="tools" className="anchor-room">
+                <div className="eyebrow" style={{ marginTop: 18 }}>Tools</div>
+                <h3>Quartermaster's Desk</h3>
+                {panels.skills.length === 0 && <p className="dim" style={{ marginBottom: 0 }}>No extra tools installed yet.</p>}
+                <ul className="list">
+                  {panels.skills.map((s) => (<li key={s.name}>{s.name} <span className="dim small">from {s.source}</span></li>))}
+                </ul>
+              </div>
             </div>
           </div>
         )}
       </div>
-    </>
+    </AppShell>
   );
 }

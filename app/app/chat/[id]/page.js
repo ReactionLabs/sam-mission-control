@@ -4,7 +4,7 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import { useParams, useRouter } from "next/navigation";
 import { api, getSession } from "../../../../lib/api";
-import AppBar from "../../../../components/AppBar";
+import AppShell from "../../../../components/AppShell";
 
 export default function ChatPage() {
   const { id } = useParams();
@@ -77,9 +77,8 @@ export default function ChatPage() {
   }
 
   return (
-    <>
-      <AppBar email={member ? member.email : ""} />
-      <div className="wrap" style={{ paddingBottom: 64, maxWidth: 860 }}>
+    <AppShell email={member ? member.email : ""}>
+      <div className="wrap" style={{ maxWidth: 860 }}>
         <p style={{ marginTop: 18 }}><Link href="/app">← Back to Mission Control</Link></p>
         <div style={{ display: "flex", alignItems: "center", gap: 14, flexWrap: "wrap" }}>
           <h1 className="display" style={{ fontSize: 30, margin: 0, flex: 1 }}>{thread ? thread.chat.title : "Chat"}</h1>
@@ -129,6 +128,6 @@ export default function ChatPage() {
         </form>
         <p className="small dim">SAM asks your approval in Mission Control before anything big happens.</p>
       </div>
-    </>
+    </AppShell>
   );
 }

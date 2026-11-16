@@ -3,7 +3,8 @@
 import { useCallback, useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { api, getSession } from "../../../lib/api";
-import AppBar, { ThemeSwitch } from "../../../components/AppBar";
+import { ThemeSwitch } from "../../../components/AppBar";
+import AppShell from "../../../components/AppShell";
 
 // Mirror of the member door's MINIMAX_MODELS list (sam repo,
 // src/members.ts): the current MiniMax chat models, picked from a
@@ -105,9 +106,8 @@ export default function SettingsPage() {
   }
 
   return (
-    <>
-      <AppBar email={member.email} />
-      <div className="wrap" style={{ paddingBottom: 64, maxWidth: 860 }}>
+    <AppShell email={member.email}>
+      <div className="wrap" style={{ maxWidth: 860 }}>
         <h1 className="display" style={{ fontSize: 34, marginTop: 22 }}>Settings</h1>
         <p className="dim">Signed in as {member.email}. Your key, your tokens, your room style.</p>
         {error && <div className="notice err">{error}</div>}
@@ -221,6 +221,6 @@ export default function SettingsPage() {
           )}
         </div>
       </div>
-    </>
+    </AppShell>
   );
 }
