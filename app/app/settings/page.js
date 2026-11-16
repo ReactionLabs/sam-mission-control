@@ -5,6 +5,11 @@ import { useRouter } from "next/navigation";
 import { api, getSession } from "../../../lib/api";
 import AppBar, { ThemeSwitch } from "../../../components/AppBar";
 
+// Mirror of the member door's MINIMAX_MODELS list (sam repo,
+// src/members.ts): the current MiniMax chat models, picked from a
+// dropdown, never typed. The door validates against the same list.
+const MINIMAX_MODELS = ["MiniMax-M2.5", "MiniMax-M2.5-highspeed", "MiniMax-M3", "MiniMax-M3.1-Flash", "MiniMax-M2.7", "MiniMax-M2.7-highspeed"];
+
 export default function SettingsPage() {
   const router = useRouter();
   const [member, setMember] = useState(null);
@@ -44,7 +49,7 @@ export default function SettingsPage() {
     try {
       const body = { apiKey, kind };
       if (kind === "custom") { body.endpoint = endpoint; body.model = model; }
-      else if (model.trim()) { body.model = model.trim(); }
+      else { body.model = MINIMAX_MODELS.includes(model) ? model : "MiniMax-M2.5"; }
       const res = await api("me/key", { method: "POST", body });
       setMember(res.member);
       setApiKey("");
@@ -155,9 +160,13 @@ export default function SettingsPage() {
               )}
               {kind === "minimax" && (
                 <div className="field">
-                  <label htmlFor="model">Model (optional)</label>
-                  <input id="model" value={model} onChange={(e) => setModel(e.target.value)} placeholder="MiniMax-M2.5" />
-                  <p className="small dim">Leave it blank and SAM uses MiniMax-M2.5, the standard model. Only change it if you know you need a newer one.</p>
+                  <label htmlFor="model">Which MiniMax model should SAM think with?</label>
+                  <select id="model" value={MINIMAX_MODELS.includes(model) ? model : "MiniMax-M2.5"} onChange={(e) => setModel(e.target.value)}>
+                    {MINIMAX_MODELS.map((m) => (
+                      <option key={m} value={m}>{m === "MiniMax-M2.5" ? "MiniMax-M2.5 (the standard one)" : m}</option>
+                    ))}
+                  </select>
+                  <p className="small dim">Pick the model your key runs. MiniMax-M2.5 is the standard one, and it is already picked for you.</p>
                 </div>
               )}
               <div className="field">
