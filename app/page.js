@@ -200,7 +200,7 @@ export default function MarketingPage() {
                 <h2 className="g-h2">Three Steps. No Manual.</h2>
               </div>
               <div className="g-steps">
-                <svg className="g-path" viewBox="0 0 1160 60" preserveAspectRatio="none" aria-hidden="true" focusable="false">
+                <svg className="g-signal" viewBox="0 0 1160 60" preserveAspectRatio="none" aria-hidden="true" focusable="false">
                   <path d="M40 46 C 300 4, 560 58, 800 22 C 950 2, 1060 20, 1130 30" />
                 </svg>
                 <div className="g-step" data-reveal>
