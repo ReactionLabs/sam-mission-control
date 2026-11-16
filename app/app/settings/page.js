@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import { api, getSession, setSession } from "../../../lib/api";
 import { ThemeSwitch } from "../../../components/AppBar";
 import AppShell from "../../../components/AppShell";
+import OpeningState from "../../../components/OpeningState";
 
 // Mirror of the member door's MINIMAX_MODELS list (sam repo,
 // src/members.ts): the current MiniMax chat models, picked from a
@@ -111,13 +112,13 @@ export default function SettingsPage() {
   }
 
   if (!member) {
-    return <div className="wrap" style={{ paddingTop: 64 }}>{error ? <div className="notice err">{error}</div> : "Opening Settings..."}</div>;
+    return <OpeningState label="Opening Settings..." error={error} />;
   }
 
   return (
     <AppShell email={member.email}>
       <div className="wrap" style={{ maxWidth: 860 }}>
-        <h1 className="display" style={{ fontSize: 34, marginTop: 22 }}>Settings</h1>
+        <h1 className="display" style={{ fontSize: 38, marginTop: 22 }}>Settings</h1>
         <p className="dim">Signed in as {member.email}. Your key, your tokens, your room style.</p>
         {error && <div className="notice err">{error}</div>}
         {note && <div className="notice">{note}</div>}
@@ -224,7 +225,7 @@ export default function SettingsPage() {
             <div style={{ marginTop: 16 }}>
               <div className="eyebrow">The command line</div>
               <p className="dim small">The full SAM command line drives the same engine this app does:</p>
-              <p className="mono small" style={{ background: "var(--crt)", color: "#A9EDB8", borderRadius: 10, padding: "12px 16px", overflowX: "auto", whiteSpace: "nowrap" }}>{dev.cli.install}</p>
+              <p className="mono small cmd-line">{dev.cli.install}</p>
               <p className="dim small">{dev.api.note} {dev.logs.note}</p>
             </div>
           )}

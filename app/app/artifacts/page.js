@@ -5,6 +5,7 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { api, getSession } from "../../../lib/api";
 import AppShell from "../../../components/AppShell";
+import OpeningState from "../../../components/OpeningState";
 
 // Artifacts (maturity pass, 2026-11-16): the member's deliverables
 // as their own room. SAM makes these in chat through its artifact
@@ -45,7 +46,7 @@ export default function ArtifactsPage() {
   }, [load, router]);
 
   if (!member) {
-    return <div className="wrap" style={{ paddingTop: 64 }}>{error ? <div className="notice err">{error}</div> : "Opening your artifacts..."}</div>;
+    return <OpeningState label="Opening your artifacts..." error={error} />;
   }
 
   return (
@@ -58,6 +59,10 @@ export default function ArtifactsPage() {
         <p className="dim" style={{ marginTop: 6 }}>Pages and documents your SAM built for you in chat, kept at a stable home. Ask SAM to revise one and the same artifact moves to its next version, right here.</p>
 
         {error && <div className="notice err">{error}</div>}
+
+        {!artifacts && !error && (
+          <p className="loading-line"><span className="orb" /> Opening the shelf...</p>
+        )}
 
         {artifacts && artifacts.length === 0 && (
           <div className="notice">

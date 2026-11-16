@@ -6,6 +6,7 @@ import { useParams, useRouter } from "next/navigation";
 import { api, getSession } from "../../../../lib/api";
 import { renderMarkdown } from "../../../../lib/markdown";
 import AppShell from "../../../../components/AppShell";
+import OpeningState from "../../../../components/OpeningState";
 
 // The artifact reader: one deliverable, opened. Documents render
 // through the app's escape-first markdown reader; pages run in a
@@ -66,7 +67,7 @@ export default function ArtifactReaderPage() {
   }
 
   if (!member) {
-    return <div className="wrap" style={{ paddingTop: 64 }}>{error ? <div className="notice err">{error}</div> : "Opening the artifact..."}</div>;
+    return <OpeningState label="Opening the artifact..." error={error} />;
   }
 
   const isOld = head && viewing && viewing.version !== head.version;

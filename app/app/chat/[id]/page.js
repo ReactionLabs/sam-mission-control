@@ -220,7 +220,7 @@ export default function ChatPage() {
 
           {started && (
             <div className="chat-title-row">
-              <h1 className="display chat-title">{thread.chat.title}</h1>
+              <h1 className="display chat-title" title={thread.chat.title}>{thread.chat.title}</h1>
               {thread.turnActive && (
                 <>
                   <span className="pill"><span className="orb" /> SAM is working</span>
@@ -234,7 +234,7 @@ export default function ChatPage() {
 
           <div className="chat-body-wrap">
             <div className="chat-body" ref={bodyRef}>
-              {!thread && !error && <p className="dim chat-opening">Opening the mission file...</p>}
+              {!thread && !error && <p className="chat-opening"><span className="orb" /> Opening the mission file...</p>}
               {thread && started && (
                 <div className="thread chat-thread">
                   {thread.messages.map((m) => (

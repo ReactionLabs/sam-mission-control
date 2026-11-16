@@ -28,6 +28,7 @@ export default function AuthForm({ mode }) {
   }
 
   return (
+    <div className="auth-screen">
     <div className="wrap" style={{ maxWidth: 520, paddingTop: 48, paddingBottom: 64 }}>
       <p><Link href="/" style={{ textDecoration: "none" }}><Wordmark size={44} /></Link></p>
       <h1 className="display" style={{ fontSize: 36, marginTop: 24 }}>
@@ -43,7 +44,7 @@ export default function AuthForm({ mode }) {
         <div className="card" style={{ marginTop: 20 }}>
           <div className="eyebrow">Check your email</div>
           <h3>Your link is on its way to {email}.</h3>
-          <p className="dim" style={{ marginBottom: 0 }}>Open it on this device and you land right in your Mission Control. Did not arrive? Check the spam folder, then <button type="button" onClick={() => setState("idle")} style={{ background: "none", border: 0, color: "var(--accent-bright)", font: "inherit", cursor: "pointer", padding: 0, textDecoration: "underline" }}>ask for another</button>.</p>
+          <p className="dim" style={{ marginBottom: 0 }}>Open it on this device and you land right in your Mission Control. Did not arrive? Check the spam folder, then <button type="button" className="auth-inline-btn" onClick={() => setState("idle")}>ask for another</button>.</p>
         </div>
       )}
       {state === "sent-nomail" && (
@@ -72,6 +73,7 @@ export default function AuthForm({ mode }) {
       <div className="hero-art" style={{ marginTop: 28 }}>
         <img src="/hero.jpg" alt="SAM headquarters" />
       </div>
+    </div>
     </div>
   );
 }

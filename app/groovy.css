@@ -498,6 +498,9 @@
   .g-paths { grid-template-columns: 1fr; }
   .demo-result-row { flex-direction: column; gap: 2px; }
   .demo-result-row dt { min-width: 0; }
+  /* The install line wraps on a phone instead of clipping its
+     tail off the edge of the CRT box (beauty pass, 2026-11-16). */
+  .g-crt .cmd { white-space: normal; overflow-wrap: anywhere; font-size: 20px; line-height: 1.35; }
   .tp-body { min-height: 0; }
   .g-finale { min-height: 500px; }
   .g-car { bottom: 16.5%; }

@@ -23,10 +23,26 @@ export default function Mark({ size = 40 }) {
   );
 }
 
+// The brand mark (Dip's pick, 2026-11-16: "That looks actually
+// pretty sick"): the clean shadow mark, an original 1960s spy
+// silhouette, prepared from his approved art (trimmed, re-inked
+// flat, negative space kept honest). It rides in a cream badge -
+// the art's own ground, carried with it - so the ink reads on
+// every surface and in every posture, dark or light. Brand spots
+// wear this; the roundel above stays the in-product motif (the
+// mission radar, the theme-preview miniature).
+export function BrandMark({ size = 40 }) {
+  return (
+    <span className="brand-mark" style={{ height: size, width: Math.round(size * 1.18) }} aria-hidden="true">
+      <img src="/brand/mark-ink.png" alt="" />
+    </span>
+  );
+}
+
 export function Wordmark({ size = 40, dark = false }) {
   return (
     <span style={{ display: "inline-flex", alignItems: "center", gap: 10 }}>
-      <Mark size={size} />
+      <BrandMark size={size} />
       <span style={{ lineHeight: 1 }}>
         <span className="display" style={{ fontSize: size * 0.62, display: "block", color: dark ? "#1D0F06" : undefined }}>SAM</span>
         <span style={{ fontSize: size * 0.24, letterSpacing: ".18em", fontWeight: 600, textTransform: "uppercase", color: dark ? "#1D0F06" : undefined }}>Secret Agent Man</span>

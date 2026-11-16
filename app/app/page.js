@@ -5,6 +5,7 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { api, getSession } from "../../lib/api";
 import AppShell from "../../components/AppShell";
+import OpeningState from "../../components/OpeningState";
 
 function fmtDate(iso) {
   try { return new Date(iso).toLocaleString(); } catch { return ""; }
@@ -50,7 +51,7 @@ export default function AccountHome() {
   }
 
   if (!member) {
-    return <div className="wrap" style={{ paddingTop: 64 }}>{error ? <div className="notice err">{error}</div> : "Opening Mission Control..."}</div>;
+    return <OpeningState label="Opening Mission Control..." error={error} />;
   }
 
   const cannotThink = member.status !== "active"
@@ -124,6 +125,10 @@ export default function AccountHome() {
             </span>
           </div>
         </div>
+
+        {!panels && !error && (
+          <p className="loading-line"><span className="orb" /> Opening your rooms...</p>
+        )}
 
         {panels && (
           /* The first surface on Tailwind utilities (adoption proof,

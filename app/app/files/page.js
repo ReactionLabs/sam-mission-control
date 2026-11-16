@@ -5,6 +5,7 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { api, getSession } from "../../../lib/api";
 import AppShell from "../../../components/AppShell";
+import OpeningState from "../../../components/OpeningState";
 
 // Files (maturity pass, 2026-11-16): one organized home for
 // everything a member's SAM keeps for them - the artifacts it made
@@ -76,7 +77,7 @@ export default function FilesPage() {
   }, [files, query]);
 
   if (!member) {
-    return <div className="wrap" style={{ paddingTop: 64 }}>{error ? <div className="notice err">{error}</div> : "Opening your files..."}</div>;
+    return <OpeningState label="Opening your files..." error={error} />;
   }
 
   const artifacts = shown ? shown.filter((f) => f.group === "artifact") : [];
@@ -97,6 +98,10 @@ export default function FilesPage() {
           <label htmlFor="file-search">Search by title</label>
           <input id="file-search" type="search" value={query} onChange={(e) => setQuery(e.target.value)} placeholder="Try a title, or the chat that made it" />
         </div>
+
+        {!shown && !error && (
+          <p className="loading-line"><span className="orb" /> Opening the cabinet...</p>
+        )}
 
         {shown && shown.length === 0 && (
           <div className="notice">Nothing matches that search. <button type="button" onClick={() => setQuery("")} style={{ background: "none", border: 0, color: "inherit", font: "inherit", fontWeight: 700, cursor: "pointer", textDecoration: "underline", padding: 0 }}>Clear the search</button></div>

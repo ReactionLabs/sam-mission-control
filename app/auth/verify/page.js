@@ -30,6 +30,7 @@ function VerifyInner() {
   }, [params]);
 
   return (
+    <div className="auth-screen">
     <div className="wrap" style={{ maxWidth: 520, paddingTop: 64, paddingBottom: 64, textAlign: "center" }}>
       <Wordmark size={52} />
       {state === "working" && (
@@ -46,12 +47,13 @@ function VerifyInner() {
         </>
       )}
     </div>
+    </div>
   );
 }
 
 export default function VerifyPage() {
   return (
-    <Suspense fallback={<div className="wrap" style={{ paddingTop: 64 }}>Opening your door...</div>}>
+    <Suspense fallback={<div className="auth-screen"><div className="wrap" style={{ paddingTop: 64 }}>Opening your door...</div></div>}>
       <VerifyInner />
     </Suspense>
   );
