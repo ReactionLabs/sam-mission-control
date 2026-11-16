@@ -97,12 +97,21 @@ export default function AppShell({ email, children }) {
     router.replace("/login");
   }
 
+  // Talk means voice (Dip ruling 2026-11-16): on a chat screen it
+  // opens the voice call for THIS chat (the page listens for the
+  // event); anywhere else it starts a fresh mission and opens the
+  // call on it. A member with no voice key lands on the panel's
+  // plain explanation and a Settings pointer, never a dead end.
   async function talk() {
     if (talkBusy) return;
+    if (pathname && pathname.startsWith("/app/chat/")) {
+      window.dispatchEvent(new Event("sam:voice-open"));
+      return;
+    }
     setTalkBusy(true);
     try {
       const res = await api("chats", { method: "POST", body: { title: "New mission" } });
-      router.push("/app/chat/" + res.chat.id);
+      router.push("/app/chat/" + res.chat.id + "?voice=1");
     } catch { /* stay here; the page surfaces its own errors */ }
     setTalkBusy(false);
   }
@@ -176,7 +185,7 @@ export default function AppShell({ email, children }) {
           <span className="dock-glyph" aria-hidden="true"><IconMissions /></span>
           <span className="dock-label">Missions</span>
         </MotionLink>
-        <motion.button type="button" className="dock-talk" onClick={talk} disabled={talkBusy} aria-label="Talk to SAM, start a new mission"
+        <motion.button type="button" className="dock-talk" onClick={talk} disabled={talkBusy} aria-label="Talk to SAM, start a voice call"
           animate={reduce || talkBusy ? { scale: 1 } : { scale: [1, 1.07, 1] }}
           transition={reduce ? { duration: 0 } : { duration: 2.6, repeat: Infinity, ease: "easeInOut" }}
           whileTap={reduce ? undefined : { scale: 0.88 }}>
