@@ -395,6 +395,24 @@ h1, h2, h3 { line-height: 1.2; margin: 0 0 12px; }
   .msg { max-width: 92%; }
 }
 
+/* Artifact reader (maturity pass, 2026-11-16): a page artifact
+   runs in a sealed frame that fills the card; a document artifact
+   reads as set type on the panel. Tokens only, so all four room
+   styles carry it unchanged. */
+.artifact-frame { width: 100%; height: 70vh; min-height: 420px; border: 0; display: block; background: var(--paper); }
+.md-body { line-height: 1.65; overflow-wrap: break-word; }
+.md-body h2, .md-body h3, .md-body h4 { font-family: "Libre Franklin", sans-serif; margin: 22px 0 8px; }
+.md-body h2:first-child, .md-body h3:first-child, .md-body h4:first-child { margin-top: 0; }
+.md-body p { margin: 0 0 12px; }
+.md-body ul, .md-body ol { margin: 0 0 12px; padding-left: 22px; }
+.md-body li { margin-bottom: 4px; }
+.md-body blockquote { margin: 0 0 12px; padding: 4px 0 4px 14px; border-left: 3px solid var(--accent); color: var(--tx); }
+.md-body code { font-family: "IBM Plex Mono", monospace; font-size: .92em; background: var(--panel-2); border: 1px solid var(--line); border-radius: 6px; padding: 0 5px; }
+.md-body pre { background: var(--panel-2); border: 1px solid var(--line); border-radius: 10px; padding: 12px 14px; overflow-x: auto; margin: 0 0 12px; }
+.md-body pre code { background: none; border: 0; padding: 0; }
+.md-body hr { border: 0; border-top: 1px solid var(--line); margin: 18px 0; }
+.md-body a { color: var(--accent); font-weight: 600; }
+
 /* Reduced motion, everywhere (the app-wide law, matching the
    marketing page's rule): every animation and transition rests.
    The Motion components also check useReducedMotion and render

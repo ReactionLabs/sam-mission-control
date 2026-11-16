@@ -25,6 +25,8 @@ const pressRoom = { type: "spring", stiffness: 480, damping: 26 };
 const ROOMS = [
   { href: "/app", label: "Mission Control", flavor: "The Briefing Room", match: (p) => p === "/app" },
   { href: "/app/your-sam", label: "Your Sam", flavor: "Skills, soul, heartbeats", match: (p) => p.startsWith("/app/your-sam") },
+  { href: "/app/artifacts", label: "Artifacts", flavor: "Pages and documents SAM made", match: (p) => p.startsWith("/app/artifacts") },
+  { href: "/app/files", label: "Files", flavor: "Everything in one place", match: (p) => p === "/app/files" },
   { href: "/app#missions", label: "Missions", flavor: "Work in motion", match: () => false },
   { href: "/app#approvals", label: "Approvals", flavor: "Waiting on you", match: () => false },
   { href: "/app#intel", label: "Intel Feed", flavor: "What SAM has been doing", match: () => false },
