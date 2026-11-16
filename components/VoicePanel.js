@@ -285,11 +285,11 @@ export default function VoicePanel({ chatId, onClose, onSaved }) {
       <audio ref={audioRef} autoPlay />
       <div className="mx-auto flex w-full max-w-[860px] flex-1 flex-col px-5 pb-6 pt-4 min-h-0">
         <div className="flex items-center gap-3">
-          <span className="pill"><span className="orb" /> Voice call</span>
-          <span className="dim small">Your OpenAI key carries this call</span>
+          <span className="pill" style={{ whiteSpace: "nowrap" }}><span className="orb" /> Voice call</span>
+          <span className="dim small hidden min-[560px]:inline">Your OpenAI key carries this call</span>
           {mmReady && (
-            <button type="button" className="btn ghost small-btn ml-auto" onClick={() => void switchToMm()} disabled={state === "saving"}>
-              Turn by turn instead
+            <button type="button" className="btn ghost small-btn ml-auto" style={{ whiteSpace: "nowrap" }} onClick={() => void switchToMm()} disabled={state === "saving"}>
+              Turn by turn
             </button>
           )}
           <button type="button" className={"btn ghost small-btn" + (mmReady ? "" : " ml-auto")} onClick={end} disabled={state === "saving"}>
