@@ -67,7 +67,10 @@ export default function ArtifactsPage() {
         )}
 
         {artifacts && artifacts.length > 0 && (
-          <div className="grid">
+          /* Same Tailwind grid as Mission Control home (adoption
+             proof, 2026-11-16): identical layout values to the old
+             .grid rule, in utilities. */
+          <div className="grid grid-cols-1 min-[901px]:grid-cols-2 gap-5 my-5">
             {artifacts.map((a) => (
               <Link key={a.id} href={"/app/artifacts/" + a.id} className="card" style={{ textDecoration: "none", color: "inherit", display: "block" }}>
                 <div className="eyebrow">{a.kind === "html" ? "Page" : "Document"}</div>
