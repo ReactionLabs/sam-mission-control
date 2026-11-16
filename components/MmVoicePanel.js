@@ -251,8 +251,8 @@ export default function MmVoicePanel({ chatId, onClose, onSaved, onSwitchToRealt
       <audio ref={audioRef} />
       <div className="mx-auto flex w-full max-w-[860px] flex-1 flex-col px-5 pb-6 pt-4 min-h-0">
         <div className="flex items-center gap-3">
-          <span className="pill"><span className="orb" /> Voice, turn by turn</span>
-          <span className="dim small">Your MiniMax key carries this voice</span>
+          <span className="pill" style={{ whiteSpace: "nowrap" }}><span className="orb" /> Voice, turn by turn</span>
+          <span className="dim small hidden min-[560px]:inline">Your MiniMax key carries this voice</span>
           <button type="button" className="btn ghost small-btn ml-auto" onClick={close}>
             {busy || phase === "recording" ? "End" : "Close"}
           </button>
