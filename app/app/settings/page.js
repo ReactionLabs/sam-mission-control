@@ -2,7 +2,7 @@
 
 import { useCallback, useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
-import { api, getSession } from "../../../lib/api";
+import { api, getSession, setSession } from "../../../lib/api";
 import { ThemeSwitch } from "../../../components/AppBar";
 import AppShell from "../../../components/AppShell";
 
@@ -99,6 +99,15 @@ export default function SettingsPage() {
       setTokens(t.tokens);
     } catch (err) { setError(err.message); }
     setBusy("");
+  }
+
+  // Sign out lives here now (Dip's header slimming, 2026-11-16):
+  // the header keeps the mark and the duty light, and leaving the
+  // app is a Settings act, one dock tap away.
+  async function signOut() {
+    try { await api("auth/sign-out", { method: "POST", body: {} }); } catch { /* the token dies locally either way */ }
+    setSession("");
+    router.replace("/login");
   }
 
   if (!member) {
@@ -219,6 +228,13 @@ export default function SettingsPage() {
               <p className="dim small">{dev.api.note} {dev.logs.note}</p>
             </div>
           )}
+        </div>
+
+        <div className="card" style={{ marginBottom: 20 }}>
+          <div className="eyebrow">Leaving</div>
+          <h3>Sign out of SAM</h3>
+          <p className="dim">Signs this device out. Your SAM, your chats, and your key stay right where they are.</p>
+          <button className="btn ghost" type="button" onClick={signOut}>Sign out</button>
         </div>
       </div>
     </AppShell>
