@@ -195,6 +195,9 @@
 
 /* ---------- Sections and panels ---------- */
 .g-section { padding: 88px 0; position: relative; }
+/* Anchor landings clear the sticky nav (beauty pass, 2026-11-16):
+   a jump to a section used to slide its heading under the bar. */
+.g-section, .g-finale { scroll-margin-top: 84px; }
 .g-panel {
   background: linear-gradient(180deg, rgba(44, 23, 69, .96), rgba(32, 14, 52, .97));
   border: 1px solid rgba(213, 172, 64, .4); border-radius: 26px;
@@ -498,6 +501,9 @@
   .g-paths { grid-template-columns: 1fr; }
   .demo-result-row { flex-direction: column; gap: 2px; }
   .demo-result-row dt { min-width: 0; }
+  /* The install line wraps on a phone instead of clipping its
+     tail off the edge of the CRT box (beauty pass, 2026-11-16). */
+  .g-crt .cmd { white-space: normal; overflow-wrap: anywhere; font-size: 20px; line-height: 1.35; }
   .tp-body { min-height: 0; }
   .g-finale { min-height: 500px; }
   .g-car { bottom: 16.5%; }

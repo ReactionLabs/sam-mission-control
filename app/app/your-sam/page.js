@@ -6,6 +6,7 @@ import { useRouter } from "next/navigation";
 import { motion, useReducedMotion } from "motion/react";
 import { api, getSession } from "../../../lib/api";
 import AppShell from "../../../components/AppShell";
+import OpeningState from "../../../components/OpeningState";
 
 // Your Sam (Dip's order, 2026-11-16): the member's own scoped SAM,
 // made visible and tunable from a phone first. Four cards, all
@@ -266,7 +267,7 @@ export default function YourSamPage() {
   }, [router]);
 
   if (!member) {
-    return <div className="wrap" style={{ paddingTop: 64 }}>{error ? <div className="notice err">{error}</div> : "Opening Your Sam..."}</div>;
+    return <OpeningState label="Opening Your Sam..." error={error} />;
   }
 
   return (
