@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { motion, useReducedMotion } from "motion/react";
 import Mark from "./Mark";
 
 // "One Machine. Three Moods." One shared interface, three visual
@@ -16,6 +17,7 @@ const THEMES = [
 ];
 
 export default function ThemePreview() {
+  const reduce = useReducedMotion();
   const [theme, setTheme] = useState("headquarters");
   const [stamped, setStamped] = useState(false);
 
@@ -41,6 +43,13 @@ export default function ThemePreview() {
       </div>
 
       <div className={`tp tp--${theme}`}>
+        <motion.div
+          key={theme}
+          initial={reduce ? false : { opacity: 0.3, rotateY: 7 }}
+          animate={{ opacity: 1, rotateY: 0 }}
+          transition={{ duration: 0.38, ease: "easeOut" }}
+          style={{ transformPerspective: 900 }}
+        >
         <div className="tp-bar">
           <span className="tp-brand"><Mark size={26} /> SAM</span>
           <span className="tp-pill"><span className="tp-orb" /> On duty</span>
@@ -68,6 +77,7 @@ export default function ThemePreview() {
             <span className="tp-send">Send</span>
           </div>
         </div>
+        </motion.div>
       </div>
 
       <p className="tp-caption">

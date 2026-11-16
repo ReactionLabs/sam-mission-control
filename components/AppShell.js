@@ -3,9 +3,17 @@
 import { useState } from "react";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
+import { motion, useReducedMotion } from "motion/react";
 import { api, setSession } from "../lib/api";
 import { ThemeSwitch } from "./AppBar";
 import { Wordmark } from "./Mark";
+
+// Pressed, not clicked (Motion pass, 2026-11-16): sidebar rooms and
+// dock items press with weight, the dock TALK button breathes while
+// it waits, and page turns inside /app are a quick fade and slide.
+// All of it rests under prefers-reduced-motion.
+const MotionLink = motion.create(Link);
+const pressRoom = { type: "spring", stiffness: 480, damping: 26 };
 
 // The app shell (Dip's order, 2026-11-16): a sidebar is the spine on
 // desktop; on mobile a groovy console bar rides the bottom. The rooms
@@ -28,6 +36,7 @@ const ROOMS = [
 export default function AppShell({ email, children }) {
   const router = useRouter();
   const pathname = usePathname();
+  const reduce = useReducedMotion();
   const [talkBusy, setTalkBusy] = useState(false);
 
   async function signOut() {
@@ -56,19 +65,21 @@ export default function AppShell({ email, children }) {
         </Link>
         <span className="pill side-duty"><span className="orb" /> SAM is on duty</span>
 
-        <button type="button" className="btn side-talk" onClick={talk} disabled={talkBusy}>
+        <motion.button type="button" className="btn side-talk" onClick={talk} disabled={talkBusy}
+          whileTap={reduce ? undefined : { scale: 0.97 }} transition={pressRoom}>
           Talk to SAM
-        </button>
+        </motion.button>
 
         <nav className="side-nav">
           {ROOMS.map((r) => {
             const active = r.match(pathname || "");
             return (
-              <Link key={r.href} href={r.href} className={"side-room" + (active ? " active" : "")}
-                aria-current={active ? "page" : undefined}>
+              <MotionLink key={r.href} href={r.href} className={"side-room" + (active ? " active" : "")}
+                aria-current={active ? "page" : undefined}
+                whileTap={reduce ? undefined : { scale: 0.96 }} transition={pressRoom}>
                 <span className="side-room-label">{r.label}</span>
                 <span className="side-room-flavor">{r.flavor}</span>
-              </Link>
+              </MotionLink>
             );
           })}
         </nav>
@@ -92,29 +103,45 @@ export default function AppShell({ email, children }) {
         <button type="button" className="btn ghost small-btn" onClick={signOut}>Sign out</button>
       </div>
 
-      <main className="shell-main">{children}</main>
+      <main className="shell-main">
+        <motion.div
+          key={pathname}
+          initial={reduce ? false : { opacity: 0, x: 16 }}
+          animate={{ opacity: 1, x: 0 }}
+          transition={{ duration: 0.22, ease: "easeOut" }}
+        >
+          {children}
+        </motion.div>
+      </main>
 
       <nav className="dock" aria-label="Main rooms">
-        <Link href="/app" className={"dock-item" + (pathname === "/app" ? " active" : "")}>
+        <MotionLink href="/app" className={"dock-item" + (pathname === "/app" ? " active" : "")}
+          whileTap={reduce ? undefined : { scale: 0.92 }} transition={pressRoom}>
           <span className="dock-glyph" aria-hidden="true">◎</span>
           <span className="dock-label">Control</span>
-        </Link>
-        <Link href="/app#missions" className="dock-item">
+        </MotionLink>
+        <MotionLink href="/app#missions" className="dock-item"
+          whileTap={reduce ? undefined : { scale: 0.92 }} transition={pressRoom}>
           <span className="dock-glyph" aria-hidden="true">✦</span>
           <span className="dock-label">Missions</span>
-        </Link>
-        <button type="button" className="dock-talk" onClick={talk} disabled={talkBusy} aria-label="Talk to SAM, start a new mission">
+        </MotionLink>
+        <motion.button type="button" className="dock-talk" onClick={talk} disabled={talkBusy} aria-label="Talk to SAM, start a new mission"
+          animate={reduce || talkBusy ? { scale: 1 } : { scale: [1, 1.07, 1] }}
+          transition={reduce ? { duration: 0 } : { duration: 2.6, repeat: Infinity, ease: "easeInOut" }}
+          whileTap={reduce ? undefined : { scale: 0.88 }}>
           <span className="dock-talk-glyph" aria-hidden="true">✆</span>
           <span className="dock-talk-label">Talk</span>
-        </button>
-        <Link href="/app#approvals" className="dock-item">
+        </motion.button>
+        <MotionLink href="/app#approvals" className="dock-item"
+          whileTap={reduce ? undefined : { scale: 0.92 }} transition={pressRoom}>
           <span className="dock-glyph" aria-hidden="true">✓</span>
           <span className="dock-label">Approvals</span>
-        </Link>
-        <Link href="/app/settings" className={"dock-item" + (pathname === "/app/settings" ? " active" : "")}>
+        </MotionLink>
+        <MotionLink href="/app/settings" className={"dock-item" + (pathname === "/app/settings" ? " active" : "")}
+          whileTap={reduce ? undefined : { scale: 0.92 }} transition={pressRoom}>
           <span className="dock-glyph" aria-hidden="true">⚙</span>
           <span className="dock-label">Settings</span>
-        </Link>
+        </MotionLink>
       </nav>
     </div>
   );

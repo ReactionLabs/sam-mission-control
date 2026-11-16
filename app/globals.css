@@ -394,3 +394,14 @@ h1, h2, h3 { line-height: 1.2; margin: 0 0 12px; }
   .moods, .paths, .grid { grid-template-columns: 1fr; }
   .msg { max-width: 92%; }
 }
+
+/* Reduced motion, everywhere (the app-wide law, matching the
+   marketing page's rule): every animation and transition rests.
+   The Motion components also check useReducedMotion and render
+   their final state directly, so nothing waits on a timer. */
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: .01ms !important; animation-iteration-count: 1 !important;
+    transition-duration: .01ms !important; scroll-behavior: auto !important;
+  }
+}

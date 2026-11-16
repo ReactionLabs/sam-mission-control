@@ -2,6 +2,7 @@ import Link from "next/link";
 import "./groovy.css";
 import { Wordmark } from "../components/Mark";
 import GroovyFX from "../components/GroovyFX";
+import HeroSection from "../components/HeroSection";
 import MarketingNav from "../components/MarketingNav";
 import MissionDemo from "../components/MissionDemo";
 import ThemePreview from "../components/ThemePreview";
@@ -48,20 +49,6 @@ const FEATURES = [
   },
 ];
 
-function LavaLamp() {
-  return (
-    <svg className="g-lamp" viewBox="0 0 60 112" aria-hidden="true" focusable="false">
-      <rect x="23" y="6" width="14" height="8" rx="2" fill="#C9973F" />
-      <path d="M22 92 L27.5 16 Q30 9 32.5 16 L38 92 Z" fill="#FF3EA5" opacity=".88" />
-      <circle cx="30" cy="70" r="6.5" fill="#E86C25" />
-      <circle cx="31" cy="46" r="4.4" fill="#D5AC40" />
-      <circle cx="29" cy="28" r="2.8" fill="#E86C25" />
-      <ellipse cx="30" cy="86" rx="5.4" ry="3.4" fill="#D5AC40" />
-      <path d="M16 106 L44 106 L39 92 L21 92 Z" fill="#392348" stroke="#C9973F" strokeWidth="1.6" />
-    </svg>
-  );
-}
-
 function GridHorizon() {
   const rays = [0, 150, 300, 450, 540, 600, 660, 750, 900, 1050, 1200];
   return (
@@ -106,43 +93,7 @@ export default function MarketingPage() {
 
         <main>
           {/* ---------- Hero: Welcome to Headquarters ---------- */}
-          <section className="g-hero" data-scene="hero">
-            <div className="wrap">
-              <div className="g-hero-grid">
-                <div className="g-hero-copy">
-                  <span className="g-readout"><span className="orb" /> SAM IS ON DUTY</span>
-                  <div className="g-sam" aria-hidden="true">SAM</div>
-                  <h1>The AI Assistant for the Rest of Us.</h1>
-                  <p className="sub">
-                    SAM is a secret agent for your business. Tell him what needs doing, in plain
-                    words, and he gets to work: sorting inquiries, drafting follow-ups, keeping
-                    your missions moving. Before anything big happens, he asks your approval.
-                  </p>
-                  <p className="g-hero-ctas">
-                    <Link href="/signup" className="btn">Get Started Free</Link>
-                    <a href="#demo" className="btn ghost" style={{ color: "#FFF3D6", borderColor: "#C9973F" }}>Watch SAM in Action</a>
-                  </p>
-                  <p className="small fineprint">Free to start with your own AI key. No card to sign up.</p>
-                </div>
-                <div className="g-hero-art">
-                  <LavaLamp />
-                  <div className="g-hero-frame">
-                    <img src="/hero.jpg" alt="SAM headquarters: a 1967 mission control room, imagined the way 1967 thought the future would look" fetchPriority="high" />
-                  </div>
-                  <div className="g-herocard">
-                    <div className="hc-eyebrow">Mission Control, sample screen</div>
-                    <h3>This morning at headquarters</h3>
-                    <ul>
-                      <li><span className="dot" style={{ background: "#2E9E63" }} /> 3 new inquiries, sorted and waiting</li>
-                      <li><span className="dot" style={{ background: "#E8A33D" }} /> 1 quote approval, needs your tap</li>
-                      <li><span className="dot" style={{ background: "#392348" }} /> 2 missions finished yesterday</li>
-                    </ul>
-                    <p className="hc-note">A sample of the home screen. Yours fills with your real work.</p>
-                  </div>
-                </div>
-              </div>
-            </div>
-          </section>
+          <HeroSection />
 
           {/* ---------- Interactive mission demo ---------- */}
           <section className="g-section" id="demo" data-scene="demo" style={{ paddingTop: 20 }}>

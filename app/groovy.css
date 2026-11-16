@@ -160,19 +160,19 @@
   font-family: "Lilita One", sans-serif; line-height: .9;
   font-size: clamp(96px, 13vw, 168px); color: #fff3d6;
   text-shadow: 5px 5px 0 #e86c25, 11px 11px 0 rgba(255, 62, 165, .5);
-  animation: hero-in .8s cubic-bezier(.2, .8, .2, 1) both;
 }
+/* The SAM letters are Motion spans now (HeroSection); they need to
+   be boxes before a transform can move them. */
+.g-sam-letter { display: inline-block; }
 .g-hero h1 {
   font-family: "Lilita One", sans-serif; font-weight: 400;
   font-size: clamp(34px, 4.4vw, 54px); line-height: 1.04; margin: 14px 0 16px;
-  animation: hero-in .8s .1s cubic-bezier(.2, .8, .2, 1) both;
 }
-.g-hero .sub { font-size: 19px; color: #eedcae; max-width: 46ch; margin: 0; animation: hero-in .8s .2s cubic-bezier(.2, .8, .2, 1) both; }
-.g-hero-ctas { display: flex; gap: 12px; flex-wrap: wrap; margin-top: 26px; animation: hero-in .8s .3s cubic-bezier(.2, .8, .2, 1) both; }
-.g-hero .fineprint { color: #d9c39a; margin-top: 14px; animation: hero-in .8s .4s cubic-bezier(.2, .8, .2, 1) both; }
-@keyframes hero-in { from { opacity: 0; transform: translateY(22px); } to { opacity: 1; transform: none; } }
+.g-hero .sub { font-size: 19px; color: #eedcae; max-width: 46ch; margin: 0; }
+.g-hero-ctas { display: flex; gap: 12px; flex-wrap: wrap; margin-top: 26px; }
+.g-hero .fineprint { color: #d9c39a; margin-top: 14px; }
 
-.g-hero-art { position: relative; animation: hero-in .9s .25s cubic-bezier(.2, .8, .2, 1) both; }
+.g-hero-art { position: relative; }
 .g-hero-frame {
   border: 3px solid #c9973f; border-radius: 24px; overflow: hidden;
   box-shadow: inset 0 1px 0 rgba(255,243,214,.25), 0 24px 48px rgba(8, 1, 16, .55);
@@ -225,7 +225,7 @@
 .demo-stage-head { display: flex; align-items: center; gap: 16px; flex-wrap: wrap; margin-bottom: 10px; }
 .demo-status { font-weight: 600; color: #d5ac40; }
 .demo-steps { list-style: none; margin: 8px 0 0; padding: 0; }
-.demo-step { display: flex; gap: 16px; padding: 14px 12px; border-radius: 14px; border-left: 4px solid transparent; }
+.demo-step { position: relative; display: flex; gap: 16px; padding: 14px 12px; border-radius: 14px; border-left: 4px solid transparent; }
 .demo-step h3 { font-size: 17px; margin: 0 0 4px; color: #fff3d6; }
 .demo-step p { margin: 0; color: #cdbfe0; max-width: 64ch; }
 .demo-step-dot {
@@ -239,6 +239,15 @@
 .demo-step--done .demo-step-dot { border-color: #4e5839; background: #4e5839; color: #fff3d6; }
 .demo-approve { display: flex; gap: 14px; align-items: center; flex-wrap: wrap; margin-top: 12px !important; }
 .demo-approved { color: #86e29a !important; letter-spacing: .1em; font-size: 13px; margin-top: 10px !important; }
+/* The approval stamp (Bible): double border, Lilita caps, rotated
+   -8 degrees. Motion lands it (scale 1.6 to 1, .28s, once, only when
+   the approval state actually changes); CSS owns only the dress. */
+.demo-stamp {
+  position: absolute; right: 18px; top: 12px; pointer-events: none;
+  font-family: "Lilita One", sans-serif; text-transform: uppercase; letter-spacing: .12em;
+  padding: 6px 13px 4px; border: 3px solid #4e5839; outline: 1px solid #4e5839; outline-offset: 3px;
+  color: #4e5839; background: #fff3d6; border-radius: 4px;
+}
 .demo-result { margin-top: 18px; background: #fff3d6; color: #1d0f06; border-radius: 16px; padding: 20px 22px; border: 2px solid #d5ac40; }
 .demo-result h3 { margin: 0 0 10px; font-size: 18px; }
 .demo-result dl { margin: 0; }
