@@ -135,6 +135,12 @@
 .g-nav .links a:hover { color: #d5ac40; }
 .g-nav .links a.btn { color: #1d0f06; }
 .g-nav .links a.btn.ghost { color: #fff3d6; }
+/* Mobile menu (Dip's order, 2026-11-16): on a phone the bar holds
+   the brand and one Menu button; the links live in a full-width
+   panel under the bar instead of wrapping into a spill. No
+   animation on the panel, so reduced motion has nothing to tame. */
+.g-menu-btn { display: none; }
+.g-mobile-menu { display: none; }
 
 /* ---------- Hero ---------- */
 .g-hero { padding: 64px 0 96px; position: relative; }
@@ -444,6 +450,31 @@
   .g-steps { margin-top: 8px; }
 }
 @media (max-width: 700px) {
+  .g-nav-in { flex-wrap: nowrap; gap: 14px; padding: 10px 16px; }
+  .g-nav .links { display: none; }
+  .g-menu-btn {
+    display: inline-flex; align-items: center; gap: 10px; margin-left: auto;
+    min-height: 48px; padding: 10px 18px; border-radius: 12px; cursor: pointer;
+    background: #e86c25; color: #1d0f06; border: 2px solid #d5ac40;
+    font-family: "Libre Franklin", sans-serif; font-size: 16px; font-weight: 700;
+    box-shadow: 0 3px 0 #1d0f06;
+  }
+  .g-menu-btn:active { transform: translateY(2px); box-shadow: 0 1px 0 #1d0f06; }
+  .g-menu-bars { display: inline-flex; flex-direction: column; gap: 4px; }
+  .g-menu-bars span { display: block; width: 20px; height: 3px; border-radius: 2px; background: #1d0f06; }
+  .g-mobile-menu {
+    display: none; border-top: 1px solid rgba(201, 151, 63, .55);
+    background: rgba(24, 7, 36, .97); padding: 10px 16px 18px;
+  }
+  .g-mobile-menu.open { display: block; }
+  .g-mobile-link {
+    display: flex; align-items: center; min-height: 54px; padding: 6px 6px;
+    color: #fff3d6; text-decoration: none; font-weight: 600; font-size: 19px;
+    border-bottom: 1px solid rgba(255, 243, 214, .14);
+  }
+  .g-mobile-link:active { color: #d5ac40; }
+  .g-mobile-ctas { display: flex; gap: 12px; margin-top: 16px; }
+  .g-mobile-ctas .btn { flex: 1; min-height: 50px; }
   .g-section { padding: 60px 0; }
   .g-hero { padding: 44px 0 84px; }
   .psy-disc { opacity: .34; width: 190vmax; height: 190vmax; right: -120vmax; top: -100vmax; }

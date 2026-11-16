@@ -2,6 +2,7 @@ import Link from "next/link";
 import "./groovy.css";
 import { Wordmark } from "../components/Mark";
 import GroovyFX from "../components/GroovyFX";
+import MarketingNav from "../components/MarketingNav";
 import MissionDemo from "../components/MissionDemo";
 import ThemePreview from "../components/ThemePreview";
 
@@ -101,19 +102,7 @@ export default function MarketingPage() {
     <div className="groovy" data-scene="hero">
       <GroovyFX />
       <div className="groovy-main">
-        <header className="g-nav">
-          <div className="g-nav-in">
-            <Wordmark size={42} />
-            <nav className="links" aria-label="Marketing">
-              <a href="#features">Features</a>
-              <a href="#how">How It Works</a>
-              <a href="#owners">For Business Owners</a>
-              <a href="#pricing">Pricing</a>
-              <Link href="/login" className="btn ghost" style={{ minHeight: 44 }}>Log In</Link>
-              <Link href="/signup" className="btn" style={{ minHeight: 44 }}>Get Started</Link>
-            </nav>
-          </div>
-        </header>
+        <MarketingNav />
 
         <main>
           {/* ---------- Hero: Welcome to Headquarters ---------- */}

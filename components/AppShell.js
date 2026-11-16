@@ -16,6 +16,7 @@ import { Wordmark } from "./Mark";
 // so it is not listed; a dead link would be a lie.
 const ROOMS = [
   { href: "/app", label: "Mission Control", flavor: "The Briefing Room", match: (p) => p === "/app" },
+  { href: "/app/your-sam", label: "Your Sam", flavor: "Skills, soul, heartbeats", match: (p) => p.startsWith("/app/your-sam") },
   { href: "/app#missions", label: "Missions", flavor: "Work in motion", match: () => false },
   { href: "/app#approvals", label: "Approvals", flavor: "Waiting on you", match: () => false },
   { href: "/app#intel", label: "Intel Feed", flavor: "What SAM has been doing", match: () => false },

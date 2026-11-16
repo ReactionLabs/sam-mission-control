@@ -100,6 +100,17 @@ export default function AccountHome() {
           {panels && panels.chats.length === 0 && <p className="dim" style={{ marginBottom: 0 }}>No chats yet. Your first mission is one tap away.</p>}
         </div>
 
+        <div className="card" style={{ marginTop: 20 }}>
+          <div style={{ display: "flex", gap: 12, alignItems: "center", flexWrap: "wrap" }}>
+            <div style={{ flex: 1, minWidth: 240 }}>
+              <div className="eyebrow">Your Sam</div>
+              <h3 style={{ marginBottom: 4 }}>Tune the agent itself.</h3>
+              <p className="dim small" style={{ margin: 0 }}>See the skills your SAM runs, edit the two files that steer it (who it is, how it works), and set heartbeats it keeps on its own.</p>
+            </div>
+            <Link href="/app/your-sam" className="btn">Open Your Sam</Link>
+          </div>
+        </div>
+
         {panels && (
           <div className="grid">
             <div className="card anchor-room" id="approvals">

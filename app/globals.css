@@ -263,6 +263,36 @@ h1, h2, h3 { line-height: 1.2; margin: 0 0 12px; }
 .mkt footer { padding: 44px 0 56px; text-align: center; }
 .swirl-band { height: 14px; background: repeating-linear-gradient(90deg, #e86c25 0 90px, #d5ac40 90px 180px, #392348 180px 270px, #ff3ea5 270px 360px); opacity: .85; }
 
+/* The Switch (Bible): a routed slot with a brass bezel, a puck that
+   travels, a lamp, and the word. Token-driven, so all four postures
+   dress it the same way and the lamp keeps its one meaning: lit is
+   on. Used for heartbeat on/off in Your Sam. */
+.sam-switch {
+  flex: none; display: inline-flex; align-items: center; gap: 7px;
+  min-width: 86px; min-height: 44px; padding: 6px 12px 6px 8px;
+  border-radius: 999px; border: 2px solid var(--trim);
+  background: var(--panel-2); color: var(--tx-dim);
+  font: inherit; font-size: 13px; font-weight: 700; letter-spacing: .08em; text-transform: uppercase;
+  cursor: pointer; box-shadow: inset 0 2px 5px rgba(0,0,0,.35);
+  transition: transform 120ms ease;
+}
+.sam-switch:active { transform: translateY(1px); }
+.sam-switch[disabled] { opacity: .55; cursor: wait; }
+.sam-switch .sam-switch-lamp {
+  width: 10px; height: 10px; border-radius: 50%; flex: none;
+  background: var(--tx-dim); opacity: .45;
+}
+.sam-switch .sam-switch-puck {
+  width: 26px; height: 26px; border-radius: 50%; flex: none;
+  background: var(--panel); border: 2px solid var(--trim);
+  box-shadow: 0 2px 4px rgba(0,0,0,.35);
+}
+.sam-switch.on { color: var(--tx); border-color: var(--badge); }
+.sam-switch.on .sam-switch-lamp { background: var(--live); box-shadow: 0 0 8px var(--live); opacity: 1; }
+.sam-switch.on .sam-switch-puck { background: var(--accent); border-color: var(--badge); order: 3; }
+.sam-switch.on .sam-switch-word { order: 2; }
+.sam-switch .sam-switch-word { min-width: 24px; text-align: left; }
+
 /* App shell (Dip's order, 2026-11-16): sidebar spine on desktop,
    groovy console dock on mobile. The dock LOOKS like a floating
    console but behaves anchored: position fixed to the bottom with

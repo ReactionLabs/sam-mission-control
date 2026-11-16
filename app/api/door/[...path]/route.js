@@ -35,4 +35,5 @@ async function forward(req, path) {
 
 export async function GET(req, ctx) { const p = await ctx.params; return forward(req, p.path.join("/")); }
 export async function POST(req, ctx) { const p = await ctx.params; return forward(req, p.path.join("/")); }
+export async function PUT(req, ctx) { const p = await ctx.params; return forward(req, p.path.join("/")); }
 export async function DELETE(req, ctx) { const p = await ctx.params; return forward(req, p.path.join("/")); }
