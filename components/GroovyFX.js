@@ -53,6 +53,15 @@ export default function GroovyFX() {
     if (!root) return undefined;
     const reduce = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
 
+    // Stagger: children of a card group arrive in sequence instead of
+    // all at once. The delay is cleared once the reveal lands, so it
+    // never taxes the hover transitions on the same elements.
+    root.querySelectorAll(".g-feats, .g-steps, .g-folders, .g-paths").forEach((group) => {
+      group.querySelectorAll("[data-reveal]").forEach((el, i) => {
+        el.style.transitionDelay = `${Math.min(i, 5) * 80}ms`;
+      });
+    });
+
     // Reveal-on-scroll for content blocks.
     const revealIO = new IntersectionObserver(
       (entries) => {
@@ -60,6 +69,7 @@ export default function GroovyFX() {
           if (e.isIntersecting) {
             e.target.classList.add("in");
             revealIO.unobserve(e.target);
+            window.setTimeout(() => { e.target.style.transitionDelay = ""; }, 1000);
           }
         }
       },
@@ -105,7 +115,36 @@ export default function GroovyFX() {
     update();
     window.addEventListener("scroll", onScroll, { passive: true });
     window.addEventListener("resize", onScroll, { passive: true });
+
+    // GSAP ScrollTrigger (Dip: "GSAP and Framer Motion", 2026-11-16):
+    // scroll position itself turns the pinwheel disc and drifts the
+    // wave bands sideways, scrubbed, transforms only. GSAP is loaded
+    // lazily so only this page pays for it; it writes the transform
+    // property, which composes with (never clobbers) the CSS
+    // translate/rotate properties the parallax and spin already use.
+    // If the load fails, the CSS machine above still carries the page.
+    let gsapCtx = null;
+    let cancelled = false;
+    (async () => {
+      try {
+        const gsapMod = await import("gsap");
+        const stMod = await import("gsap/ScrollTrigger");
+        if (cancelled) return;
+        const gsap = gsapMod.gsap || gsapMod.default || gsapMod;
+        gsap.registerPlugin(stMod.ScrollTrigger);
+        gsapCtx = gsap.context(() => {
+          const st = { trigger: root, start: "top top", end: "bottom bottom", scrub: 1.1 };
+          gsap.to(".psy-disc", { rotation: 150, ease: "none", scrollTrigger: st });
+          gsap.to(".psy-waves--back", { x: -34, ease: "none", scrollTrigger: st });
+          gsap.to(".psy-waves--mid", { x: 44, ease: "none", scrollTrigger: st });
+          gsap.to(".psy-waves--front", { x: -58, ease: "none", scrollTrigger: st });
+        }, root);
+      } catch { /* the CSS parallax remains the fallback */ }
+    })();
+
     return () => {
+      cancelled = true;
+      if (gsapCtx) gsapCtx.revert();
       window.removeEventListener("scroll", onScroll);
       window.removeEventListener("resize", onScroll);
       revealIO.disconnect();

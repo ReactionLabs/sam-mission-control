@@ -111,6 +111,20 @@ export default function AccountHome() {
           </div>
         </div>
 
+        <div className="card" style={{ marginTop: 20 }}>
+          <div style={{ display: "flex", gap: 12, alignItems: "center", flexWrap: "wrap" }}>
+            <div style={{ flex: 1, minWidth: 240 }}>
+              <div className="eyebrow">Files</div>
+              <h3 style={{ marginBottom: 4 }}>Everything SAM made for you, in one place.</h3>
+              <p className="dim small" style={{ margin: 0 }}>The pages and documents from your chats, each with its history, plus the files that steer your SAM. One home, searchable.</p>
+            </div>
+            <span style={{ display: "flex", gap: 10, flexWrap: "wrap" }}>
+              <Link href="/app/files" className="btn">Open Files</Link>
+              <Link href="/app/artifacts" className="btn ghost">Artifacts</Link>
+            </span>
+          </div>
+        </div>
+
         {panels && (
           <div className="grid">
             <div className="card anchor-room" id="approvals">
@@ -166,9 +180,10 @@ export default function AccountHome() {
               {panels.artifacts.length === 0 && <p className="dim" style={{ marginBottom: 0 }}>None yet. Pages and documents SAM builds for you are kept here.</p>}
               <ul className="list">
                 {panels.artifacts.map((a) => (
-                  <li key={a.id}><strong>{a.title}</strong> <span className="dim small">({a.kind}, version {a.version})</span></li>
+                  <li key={a.id}><Link href={"/app/artifacts/" + a.id} style={{ fontWeight: 600 }}>{a.title}</Link> <span className="dim small">({a.kind}, version {a.version})</span></li>
                 ))}
               </ul>
+              {panels.artifacts.length > 0 && <p className="small" style={{ marginBottom: 0 }}><Link href="/app/files">See everything in Files</Link></p>}
               <div id="tools" className="anchor-room">
                 <div className="eyebrow" style={{ marginTop: 18 }}>Tools</div>
                 <h3>Quartermaster's Desk</h3>

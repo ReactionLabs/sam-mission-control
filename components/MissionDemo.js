@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
+import { motion, useReducedMotion } from "motion/react";
 
 // "Give SAM a Mission": an interactive preview. Clearly labeled as a
 // simulation with made-up example records. No real account, no real
@@ -71,6 +72,7 @@ const MISSIONS = [
 const STEP_MS = 1100;
 
 export default function MissionDemo() {
+  const reduce = useReducedMotion();
   const [missionId, setMissionId] = useState(MISSIONS[0].id);
   const [phase, setPhase] = useState(0); // 0 idle, 1..5 steps shown, 6 done
   const [running, setRunning] = useState(false);
@@ -170,6 +172,17 @@ export default function MissionDemo() {
                   {isApproval && state === "done" && (
                     <p className="demo-approved mono">APPROVED BY YOU, IN THE PREVIEW</p>
                   )}
+                  {isApproval && state === "done" && (
+                    <motion.span
+                      className="demo-stamp"
+                      aria-hidden="true"
+                      initial={reduce ? false : { opacity: 0, scale: 1.6, rotate: -8 }}
+                      animate={{ opacity: 1, scale: 1, rotate: -8 }}
+                      transition={{ duration: 0.28, ease: [0.2, 2.2, 0.4, 1] }}
+                    >
+                      Approved
+                    </motion.span>
+                  )}
                 </div>
               </li>
             );
@@ -177,7 +190,12 @@ export default function MissionDemo() {
         </ol>
 
         {phase >= 6 && (
-          <div className="demo-result">
+          <motion.div
+            className="demo-result"
+            initial={reduce ? false : { opacity: 0, y: 14 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.35, ease: "easeOut" }}
+          >
             <h3>{mission.result.title}</h3>
             <dl>
               {mission.result.rows.map(([k, v]) => (
@@ -187,7 +205,7 @@ export default function MissionDemo() {
                 </div>
               ))}
             </dl>
-          </div>
+          </motion.div>
         )}
 
         <div className="demo-controls">

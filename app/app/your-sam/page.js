@@ -3,6 +3,7 @@
 import { useCallback, useEffect, useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
+import { motion, useReducedMotion } from "motion/react";
 import { api, getSession } from "../../../lib/api";
 import AppShell from "../../../components/AppShell";
 
@@ -15,6 +16,12 @@ import AppShell from "../../../components/AppShell";
 // read-back is what renders.
 
 function SamSwitch({ on, onToggle, label, disabled }) {
+  const reduce = useReducedMotion();
+  // The puck and the word trade places through flex order; Motion's
+  // layout animation turns that swap into a slide on a spring, so
+  // the switch travels instead of teleporting. Rests when the member
+  // prefers reduced motion.
+  const glide = { layout: !reduce, transition: { type: "spring", stiffness: 500, damping: 32 } };
   return (
     <button
       type="button"
@@ -26,9 +33,25 @@ function SamSwitch({ on, onToggle, label, disabled }) {
       onClick={() => onToggle(!on)}
     >
       <span className="sam-switch-lamp" aria-hidden="true" />
-      <span className="sam-switch-puck" aria-hidden="true" />
-      <span className="sam-switch-word" aria-hidden="true">{on ? "On" : "Off"}</span>
+      <motion.span className="sam-switch-puck" aria-hidden="true" {...glide} />
+      <motion.span className="sam-switch-word" aria-hidden="true" {...glide}>{on ? "On" : "Off"}</motion.span>
     </button>
+  );
+}
+
+// Cards arrive in sequence (Motion pass, 2026-11-16): a small rise
+// and fade, staggered by position, once, as each card scrolls in.
+function RevealCard({ index, children }) {
+  const reduce = useReducedMotion();
+  return (
+    <motion.div
+      initial={reduce ? false : { opacity: 0, y: 18 }}
+      whileInView={{ opacity: 1, y: 0 }}
+      viewport={{ once: true, margin: "-30px" }}
+      transition={{ duration: 0.4, delay: index * 0.07, ease: "easeOut" }}
+    >
+      {children}
+    </motion.div>
   );
 }
 
@@ -259,6 +282,7 @@ export default function YourSamPage() {
         </p>
         {error && <div className="notice err">{error}</div>}
 
+        <RevealCard index={0}>
         <div className="card anchor-room" id="skills" style={{ marginBottom: 20 }}>
           <div className="eyebrow">Skills</div>
           <h3>Playbooks your SAM can run</h3>
@@ -280,12 +304,19 @@ export default function YourSamPage() {
             </ul>
           )}
         </div>
+        </RevealCard>
 
+        <RevealCard index={1}>
         <FileEditor kind="soul" title="Who your SAM is" fileName="SOUL.md"
           blurb="SAM's personality and voice: how it talks to you, what it cares about, how it carries itself. This is the file that makes your SAM yours." />
+        </RevealCard>
+        <RevealCard index={2}>
         <FileEditor kind="agents" title="How your SAM works" fileName="AGENTS.md"
           blurb="Your standing operating rules: how work gets done, what to check first, what always needs your okay before it happens." />
+        </RevealCard>
+        <RevealCard index={3}>
         <Heartbeats />
+        </RevealCard>
       </div>
     </AppShell>
   );

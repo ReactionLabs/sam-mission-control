@@ -7,6 +7,24 @@ import { api, getSession } from "../../../../lib/api";
 import AppShell from "../../../../components/AppShell";
 import Mark from "../../../../components/Mark";
 
+// When SAM's reply points at an artifact it made (the engine's
+// stable /artifact/<id> path), the member's door on that sentence
+// is the app's own reader - turn the path into a link that opens
+// the artifact right here instead of a dead string.
+function linkifyArtifacts(content) {
+  const parts = String(content).split(/(\/artifact\/[0-9a-fA-F-]{36})/g);
+  if (parts.length === 1) return content;
+  return parts.map((part, i) => {
+    const match = part.match(/^\/artifact\/([0-9a-fA-F-]{36})$/);
+    if (!match) return part;
+    return (
+      <Link key={i} href={"/app/artifacts/" + match[1]} style={{ color: "inherit", fontWeight: 700, textDecoration: "underline" }}>
+        {part}
+      </Link>
+    );
+  });
+}
+
 // The mission chat screen (Dip's spec + mockup, 2026-11-16):
 // "What's the mission?" is the first thing you see, the message box
 // sits within thumb reach, and the spy styling lives in the screen
@@ -221,7 +239,7 @@ export default function ChatPage() {
                 <div className="thread chat-thread">
                   {thread.messages.map((m) => (
                     <div key={m.id} className={"msg " + (m.role === "user" ? "user" : "assistant")}>
-                      {m.content}
+                      {m.role === "assistant" ? linkifyArtifacts(m.content) : m.content}
                       {m.queueStatus === "queued" && <span className="state">Waiting for SAM...</span>}
                       {m.queueStatus === "failed" && (
                         <span className="state">That message did not get through.{" "}
