@@ -155,8 +155,9 @@ export default function SettingsPage() {
               )}
               {kind === "minimax" && (
                 <div className="field">
-                  <label htmlFor="model">Model (optional, the standard one is filled in for you)</label>
-                  <input id="model" value={model} onChange={(e) => setModel(e.target.value)} placeholder="Leave blank for the standard model" />
+                  <label htmlFor="model">Model (optional)</label>
+                  <input id="model" value={model} onChange={(e) => setModel(e.target.value)} placeholder="MiniMax-M2.5" />
+                  <p className="small dim">Leave it blank and SAM uses MiniMax-M2.5, the standard model. Only change it if you know you need a newer one.</p>
                 </div>
               )}
               <div className="field">
