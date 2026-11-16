@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import Link from "next/link";
-import { api } from "../../lib/api";
+import { api } from "../lib/api";
 import { Wordmark } from "./Mark";
 
 // One form serves both doors: the first link request creates the

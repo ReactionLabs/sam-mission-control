@@ -3,8 +3,8 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import { useParams, useRouter } from "next/navigation";
-import { api, getSession } from "../../../lib/api";
-import AppBar from "../../../components/AppBar";
+import { api, getSession } from "../../../../lib/api";
+import AppBar from "../../../../components/AppBar";
 
 export default function ChatPage() {
   const { id } = useParams();
