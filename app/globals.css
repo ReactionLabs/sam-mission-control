@@ -1,3 +1,87 @@
+/* Tailwind v4, adopted as plumbing (Dip's ruling, 2026-11-16):
+   theme and utilities only, NO preflight, so Tailwind's reset can
+   never move a pixel of the existing design system. Both imports
+   sit in cascade layers; every unlayered rule below outranks a
+   utility, so an existing surface changes only where a class is
+   deliberately swapped for utilities. The @theme block maps the
+   Design Bible tokens onto Tailwind's namespaces: the role colors
+   are @theme inline references to the SAME custom properties the
+   four postures above set, so a utility like bg-panel re-dresses
+   itself when the theme switches, exactly like the hand-written
+   rules do. New surfaces build with utilities; old ones migrate
+   as they are touched. */
+@import "tailwindcss/theme.css" layer(theme);
+@import "tailwindcss/utilities.css" layer(utilities);
+
+@theme inline {
+  /* Role colors: the live posture variables (see the four
+     [data-theme] blocks below). Utilities built from these follow
+     the theme switch because they resolve var() at use time. */
+  --color-bg: var(--bg);
+  --color-panel: var(--panel);
+  --color-panel-2: var(--panel-2);
+  --color-line: var(--line);
+  --color-trim: var(--trim);
+  --color-tx: var(--tx);
+  --color-tx-dim: var(--tx-dim);
+  --color-accent: var(--accent);
+  --color-accent-tx: var(--accent-tx);
+  --color-accent-bright: var(--accent-bright);
+  --color-badge: var(--badge);
+  --color-badge-tx: var(--badge-tx);
+  --color-live: var(--live);
+  --color-live-deep: var(--live-deep);
+  --color-warn: var(--warn);
+  --color-warn-tx: var(--warn-tx);
+  --color-err: var(--err);
+  --color-err-deep: var(--err-deep);
+  --color-ok-ground: var(--ok-ground);
+  --color-ok-tx: var(--ok-tx);
+  --color-paper: var(--paper);
+  --color-paper-tx: var(--paper-tx);
+  --color-crt: var(--crt);
+  --shadow-sam: var(--shadow);
+}
+
+@theme {
+  /* The Bible palette, verbatim (tokens.css in the design bible):
+     Dip's five plus the contrast-tested working variants, for the
+     surfaces that wear fixed brand dress in every posture (the
+     marketing pages, the dock, the stamp). */
+  --color-burnt-orange: #E86C25;
+  --color-mustard: #D5AC40;
+  --color-deep-purple: #392348;
+  --color-olive: #4E5839;
+  --color-crt-green: #86E29A;
+  --color-orange-bright: #F07F3C;
+  --color-purple-raised: #4A2E5C;
+  --color-crt-soft: #A9EDB8;
+  --color-phosphor-dim: #3E9B4F;
+  --color-wood-dark: #2A1608;
+  --color-wood-panel: #3A1E0C;
+  --color-brass: #C9973F;
+  --color-lava: #FF9A3D;
+  --color-ink: #1D0F06;
+  --color-cream: #FFF3D6;
+  --color-crt-black: #050805;
+  --color-amber: #E8A33D;
+  --color-signal-red: #D43A2F;
+  --color-signal-red-deep: #A8231B;
+
+  /* The four Bible typefaces (self-hosted @font-face below). */
+  --font-display: "Lilita One", "Arial Rounded MT Bold", sans-serif;
+  --font-body: "Libre Franklin", "Helvetica Neue", Arial, sans-serif;
+  --font-mono: "IBM Plex Mono", "Courier New", monospace;
+  --font-phosphor: "VT323", "IBM Plex Mono", monospace;
+
+  /* The Bible type scale. */
+  --text-caption: 12.5px;
+  --text-small: 14px;
+  --text-headline: 22px;
+  --text-display-2: 32px;
+  --text-display-1: 44px;
+}
+
 /* SAM Mission Control design system.
    One token system, four postures (Bible section 14 + Dip's
    Command-default ruling, 2026-11-15 22:37 EST):

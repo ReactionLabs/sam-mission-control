@@ -126,7 +126,12 @@ export default function AccountHome() {
         </div>
 
         {panels && (
-          <div className="grid">
+          /* The first surface on Tailwind utilities (adoption proof,
+             2026-11-16): this grid's layout spacing is exactly what
+             the old .grid rule said - one column to 900px, two past
+             it, 20px gaps, 20px vertical margin - said in utilities
+             that resolve to the same values. */
+          <div className="grid grid-cols-1 min-[901px]:grid-cols-2 gap-5 my-5">
             <div className="card anchor-room" id="approvals">
               <div className="eyebrow">Approvals</div>
               <h3>Waiting on you {panels.approvals.length > 0 && <span className="badge">{panels.approvals.length}</span>}</h3>
