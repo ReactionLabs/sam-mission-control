@@ -216,11 +216,24 @@ export default function SettingsPage() {
 
         <div className="card" style={{ marginBottom: 20 }}>
           <div className="eyebrow">SAM's voice</div>
-          <h3>{member.hasVoiceKey ? "Your voice key is connected." : "Want to talk to SAM out loud?"}</h3>
+          <h3>{member.hasVoiceKey ? "Your voice key is connected." : member.hasMmVoice ? "Voice is already on, turn by turn." : "Want to talk to SAM out loud?"}</h3>
+          {member.hasMmVoice ? (
+            <p className="dim">
+              Your MiniMax chat key already carries voice, the turn-by-turn kind: hit Talk, say your piece,
+              and SAM answers out loud. Nothing more to add for that, it rides the key you already saved.
+              The OpenAI key below adds the other kind, a live call you can talk over, and Talk will offer
+              both whenever you hold both keys.
+            </p>
+          ) : (
+            <p className="dim">
+              Voice works with either key. Add your MiniMax chat key above and Talk turns on turn by turn:
+              you say your piece, SAM answers out loud. The OpenAI key below makes Talk a live call instead.
+            </p>
+          )}
           <p className="dim">
-            Talking, live, rides a different key: an OpenAI key, the one from your ChatGPT platform account.
+            A live call rides a different key: an OpenAI key, the one from your ChatGPT platform account.
             It lives in the same locked vault as your chat key, under its own name, never shown back, and it is
-            spent only on your calls. Your chat key keeps doing the typing; this one only carries your voice.
+            spent only on your calls. Your chat key keeps doing the typing; this one only carries the live call.
             Getting one, step by step: open <span className="mono">platform.openai.com</span>, sign in, open API Keys,
             make a key, copy it, and paste it here.
           </p>

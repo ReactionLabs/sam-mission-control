@@ -4,14 +4,18 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import { api } from "../lib/api";
 import Mark from "./Mark";
+import MmVoicePanel from "./MmVoicePanel";
 
-// Talk, for real (Dip ruling 2026-11-16): a live voice call with
-// the member's SAM, riding the member's OWN OpenAI key. The door
-// mints a short-lived Realtime secret server-side; this panel
-// receives only that secret and carries the WebRTC call straight
-// to OpenAI. The words stream in here as they are spoken, and
-// when the call ends the transcript is saved into the chat, so
-// the conversation continues in text where the call left off.
+// Talk, for real (Dip ruling 2026-11-16): voice with the
+// member's SAM, in two modes chosen by the keys the member
+// holds. The live call below rides the member's OWN OpenAI key:
+// the door mints a short-lived Realtime secret server-side; this
+// panel receives only that secret and carries the WebRTC call
+// straight to OpenAI. The words stream in here as they are
+// spoken, and when the call ends the transcript is saved into
+// the chat, so the conversation continues in text where the
+// call left off. With only a MiniMax chat key, Talk opens the
+// turn-by-turn voice instead (MmVoicePanel) - no second key.
 //
 // Voice is for talking in v1: building, research, and tool work
 // stay in the text chat, and the panel says so out loud rather
@@ -27,6 +31,13 @@ const STATE_LINES = {
 };
 
 export default function VoicePanel({ chatId, onClose, onSaved }) {
+  // Two voice modes, chosen by which keys the member holds
+  // (Dip, 2026-11-16): an OpenAI voice key buys the live call
+  // below; the MiniMax chat key alone buys the turn-by-turn
+  // voice (MmVoicePanel). The live call stays the default when
+  // both exist, and either panel can switch to the other.
+  const [member, setMember] = useState(null);
+  const [mode, setMode] = useState(null);
   const [state, setState] = useState("starting");
   const [note, setNote] = useState("");
   const [lines, setLines] = useState([]);
@@ -46,6 +57,28 @@ export default function VoicePanel({ chatId, onClose, onSaved }) {
   }, []);
 
   useEffect(() => {
+    let live = true;
+    api("me")
+      .then((res) => {
+        if (!live) return;
+        const m = (res && res.member) || {};
+        setMember(m);
+        const mm = !!m.hasMmVoice || (!!m.hasKey && m.provider && m.provider.kind === "minimax");
+        if (m.hasVoiceKey) setMode("realtime");
+        else if (mm) setMode("minimax");
+        else setMode("nokey");
+      })
+      .catch(() => {
+        // If the member view will not load, fall back to the
+        // shipped behavior: try the call, and let the mint's own
+        // plain words explain a missing key.
+        if (live) setMode("realtime");
+      });
+    return () => { live = false; };
+  }, []);
+
+  useEffect(() => {
+    if (mode !== "realtime") return;
     endedRef.current = false;
     let cancelled = false;
 
@@ -150,9 +183,9 @@ export default function VoicePanel({ chatId, onClose, onSaved }) {
     start();
     return () => { cancelled = true; teardown(); };
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [chatId, attempt]);
+  }, [chatId, attempt, mode]);
 
-  async function end() {
+  async function endCall(closePanel) {
     if (endedRef.current) return;
     endedRef.current = true;
     teardown();
@@ -169,10 +202,83 @@ export default function VoicePanel({ chatId, onClose, onSaved }) {
       }
     }
     setState("ended");
-    setTimeout(() => { if (onClose) onClose(); }, 900);
+    if (closePanel) setTimeout(() => { if (onClose) onClose(); }, 900);
+  }
+  function end() { void endCall(true); }
+  async function switchToMm() {
+    await endCall(false);
+    setMode("minimax");
   }
 
   const live = state === "listening" || state === "talking";
+  const mmReady = !!member && (!!member.hasMmVoice || (!!member.hasKey && member.provider && member.provider.kind === "minimax"));
+
+  if (mode === "minimax") {
+    return (
+      <MmVoicePanel
+        chatId={chatId}
+        onClose={onClose}
+        onSaved={onSaved}
+        onSwitchToRealtime={member && member.hasVoiceKey ? () => setMode("realtime") : undefined}
+      />
+    );
+  }
+  if (mode === null) {
+    return (
+      <div className="fixed inset-0 z-[70] flex flex-col bg-[#180722] text-[#fff3d6]" role="dialog" aria-label="Voice with SAM">
+        <div className="mx-auto flex w-full max-w-[860px] flex-1 flex-col px-5 pb-6 pt-4 min-h-0">
+          <div className="flex items-center gap-3">
+            <span className="pill"><span className="orb" /> Voice</span>
+            <button type="button" className="btn ghost small-btn ml-auto" onClick={onClose}>Close</button>
+          </div>
+          <div className="flex flex-col items-center pt-6 text-center">
+            <div className="radar" aria-hidden="true">
+              <span className="radar-glow" />
+              <span className="radar-ring r1" />
+              <span className="radar-ring r2" />
+              <span className="radar-ring r3" />
+              <span className="radar-mark"><Mark size={88} /></span>
+            </div>
+            <h2 className="display mt-3 text-[34px] leading-tight">Waking SAM up...</h2>
+          </div>
+        </div>
+      </div>
+    );
+  }
+  if (mode === "nokey") {
+    return (
+      <div className="fixed inset-0 z-[70] flex flex-col bg-[#180722] text-[#fff3d6]" role="dialog" aria-label="Voice with SAM">
+        <div className="mx-auto flex w-full max-w-[860px] flex-1 flex-col px-5 pb-6 pt-4 min-h-0">
+          <div className="flex items-center gap-3">
+            <span className="pill"><span className="orb" /> Voice</span>
+            <button type="button" className="btn ghost small-btn ml-auto" onClick={onClose}>Close</button>
+          </div>
+          <div className="flex flex-col items-center pt-6 text-center">
+            <div className="radar" aria-hidden="true">
+              <span className="radar-glow" />
+              <span className="radar-ring r1" />
+              <span className="radar-ring r2" />
+              <span className="radar-ring r3" />
+              <span className="radar-mark"><Mark size={88} /></span>
+            </div>
+            <h2 className="display mt-3 text-[34px] leading-tight">Voice needs a key first</h2>
+          </div>
+          <div className="card mt-4">
+            <p style={{ marginTop: 0 }}>
+              There are two ways to talk to SAM, and each one rides a key of yours. Turn by turn:
+              your MiniMax chat key carries it - tap, say your piece, and SAM answers out loud.
+              A live call: an OpenAI key makes Talk a real-time conversation. Add either key once
+              in Settings and voice stays on from then on.
+            </p>
+            <Link className="btn" href="/app/settings">Add a key in Settings</Link>
+          </div>
+          <p className="approval-note justify-center text-center">
+            Voice is for talking. For building and research, type it in the chat and SAM will get to work.
+          </p>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="fixed inset-0 z-[70] flex flex-col bg-[#180722] text-[#fff3d6]" role="dialog" aria-label="Voice call with SAM">
@@ -181,7 +287,12 @@ export default function VoicePanel({ chatId, onClose, onSaved }) {
         <div className="flex items-center gap-3">
           <span className="pill"><span className="orb" /> Voice call</span>
           <span className="dim small">Your OpenAI key carries this call</span>
-          <button type="button" className="btn ghost small-btn ml-auto" onClick={end} disabled={state === "saving"}>
+          {mmReady && (
+            <button type="button" className="btn ghost small-btn ml-auto" onClick={() => void switchToMm()} disabled={state === "saving"}>
+              Turn by turn instead
+            </button>
+          )}
+          <button type="button" className={"btn ghost small-btn" + (mmReady ? "" : " ml-auto")} onClick={end} disabled={state === "saving"}>
             {live || state === "connecting" || state === "starting" ? "End call" : "Close"}
           </button>
         </div>
@@ -203,10 +314,18 @@ export default function VoicePanel({ chatId, onClose, onSaved }) {
         {state === "nokey" && (
           <div className="card mt-4">
             <p style={{ marginTop: 0 }}>
-              Talking out loud rides your own OpenAI key, the one from your ChatGPT platform account.
-              SAM's chat key cannot carry a call. Add the voice key once and Talk works from then on.
+              A live call rides your own OpenAI key, the one from your ChatGPT platform account.
+              Add the voice key once and Talk works from then on.
+              {mmReady && " Or skip the call entirely: your MiniMax chat key already carries the turn-by-turn voice."}
             </p>
-            <Link className="btn" href="/app/settings">Add my voice key in Settings</Link>
+            <div style={{ display: "flex", gap: 10, flexWrap: "wrap" }}>
+              <Link className="btn" href="/app/settings">Add my voice key in Settings</Link>
+              {mmReady && (
+                <button type="button" className="btn ghost" onClick={() => setMode("minimax")}>
+                  Use turn-by-turn voice instead
+                </button>
+              )}
+            </div>
           </div>
         )}
         {state === "denied" && (
