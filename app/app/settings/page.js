@@ -19,6 +19,7 @@ export default function SettingsPage() {
   const [note, setNote] = useState("");
   const [kind, setKind] = useState("minimax");
   const [apiKey, setApiKey] = useState("");
+  const [voiceKey, setVoiceKey] = useState("");
   const [endpoint, setEndpoint] = useState("");
   const [model, setModel] = useState("");
   const [tokens, setTokens] = useState([]);
@@ -56,6 +57,28 @@ export default function SettingsPage() {
       setMember(res.member);
       setApiKey("");
       setNote("Your key is saved in the vault. SAM can think now.");
+    } catch (err) { setError(err.message); }
+    setBusy("");
+  }
+
+  async function saveVoiceKey(e) {
+    e.preventDefault();
+    setBusy("voice-key"); setError(""); setNote("");
+    try {
+      const res = await api("me/voice-key", { method: "POST", body: { apiKey: voiceKey } });
+      setMember(res.member);
+      setVoiceKey("");
+      setNote("Your voice key is saved in the vault. Talk is ready: hit Talk and speak.");
+    } catch (err) { setError(err.message); }
+    setBusy("");
+  }
+
+  async function removeVoiceKey() {
+    setBusy("voice-key"); setError("");
+    try {
+      const res = await api("me/voice-key", { method: "DELETE" });
+      setMember(res.member);
+      setNote("Your voice key was removed. Talk will ask for it again.");
     } catch (err) { setError(err.message); }
     setBusy("");
   }
@@ -189,6 +212,31 @@ export default function SettingsPage() {
               </div>
             </form>
           )}
+        </div>
+
+        <div className="card" style={{ marginBottom: 20 }}>
+          <div className="eyebrow">SAM's voice</div>
+          <h3>{member.hasVoiceKey ? "Your voice key is connected." : "Want to talk to SAM out loud?"}</h3>
+          <p className="dim">
+            Talking, live, rides a different key: an OpenAI key, the one from your ChatGPT platform account.
+            It lives in the same locked vault as your chat key, under its own name, never shown back, and it is
+            spent only on your calls. Your chat key keeps doing the typing; this one only carries your voice.
+            Getting one, step by step: open <span className="mono">platform.openai.com</span>, sign in, open API Keys,
+            make a key, copy it, and paste it here.
+          </p>
+          <form onSubmit={saveVoiceKey}>
+            <div className="field">
+              <label htmlFor="voice-key">Your OpenAI key</label>
+              <input id="voice-key" type="password" value={voiceKey} onChange={(e) => setVoiceKey(e.target.value)} autoComplete="off" placeholder="Paste your OpenAI key here" required />
+            </div>
+            <div style={{ display: "flex", gap: 10, flexWrap: "wrap" }}>
+              <button className="btn" type="submit" disabled={busy === "voice-key" || !voiceKey}>{member.hasVoiceKey ? "Replace my voice key" : "Save my voice key"}</button>
+              {member.hasVoiceKey && <button className="btn danger" type="button" disabled={busy === "voice-key"} onClick={removeVoiceKey}>Remove my voice key</button>}
+            </div>
+          </form>
+          <p className="small dim" style={{ marginBottom: 0 }}>
+            Voice is for talking. For building and research, type it in the chat and SAM will get to work.
+          </p>
         </div>
 
         <div className="card" style={{ marginBottom: 20 }}>

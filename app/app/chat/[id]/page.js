@@ -6,6 +6,7 @@ import { useParams, useRouter } from "next/navigation";
 import { api, getSession } from "../../../../lib/api";
 import AppShell from "../../../../components/AppShell";
 import Mark from "../../../../components/Mark";
+import VoicePanel from "../../../../components/VoicePanel";
 
 // When SAM's reply points at an artifact it made (the engine's
 // stable /artifact/<id> path), the member's door on that sentence
@@ -50,6 +51,7 @@ export default function ChatPage() {
   const [draft, setDraft] = useState("");
   const [error, setError] = useState("");
   const [sending, setSending] = useState(false);
+  const [voiceOpen, setVoiceOpen] = useState(false);
   // Hero lifecycle: "show" on a fresh chat, "leaving" for one fade
   // once the conversation starts, then "gone". A chat that loads
   // already started skips the hero entirely (no flash, no fade).
@@ -68,6 +70,19 @@ export default function ChatPage() {
     setThread(null);
     setDraft("");
     setError("");
+    setVoiceOpen(false);
+  }, [id]);
+
+  // Talk opens the voice call for this chat: the shell's Talk
+  // button calls in through the event, and a ?voice=1 arrival
+  // (Talk pressed anywhere else) opens it on landing.
+  useEffect(() => {
+    if (typeof window !== "undefined" && new URLSearchParams(window.location.search).get("voice") === "1") {
+      setVoiceOpen(true);
+    }
+    const open = () => setVoiceOpen(true);
+    window.addEventListener("sam:voice-open", open);
+    return () => window.removeEventListener("sam:voice-open", open);
   }, [id]);
 
   const load = useCallback(async () => {
@@ -214,8 +229,17 @@ export default function ChatPage() {
     <AppShell email={member ? member.email : ""}>
       <div className="chat-screen">
         <div className="chat-inner">
-          <p className="chat-back-row">
+          <p className="chat-back-row" style={{ display: "flex", alignItems: "center", gap: 12 }}>
             <Link href="/app" className="chat-back">← <span>Mission Control</span></Link>
+            <button type="button" className="btn small-btn" style={{ marginLeft: "auto" }} onClick={() => setVoiceOpen(true)}>
+              <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                strokeWidth="1.9" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+                <path d="M12 3a3 3 0 0 1 3 3v5a3 3 0 0 1 -6 0V6a3 3 0 0 1 3-3 Z" />
+                <path d="M5 11a7 7 0 0 0 14 0" />
+                <line x1="12" y1="18" x2="12" y2="21" />
+              </svg>
+              Talk
+            </button>
           </p>
 
           {started && (
@@ -240,6 +264,7 @@ export default function ChatPage() {
                   {thread.messages.map((m) => (
                     <div key={m.id} className={"msg " + (m.role === "user" ? "user" : "assistant")}>
                       {m.role === "assistant" ? linkifyArtifacts(m.content) : m.content}
+                      {m.source === "voice" && <span className="state">Spoken on a call</span>}
                       {m.queueStatus === "queued" && <span className="state">Waiting for SAM...</span>}
                       {m.queueStatus === "failed" && (
                         <span className="state">That message did not get through.{" "}
@@ -299,6 +324,9 @@ export default function ChatPage() {
           </div>
         </div>
       </div>
+      {voiceOpen && (
+        <VoicePanel chatId={id} onClose={() => setVoiceOpen(false)} onSaved={load} />
+      )}
     </AppShell>
   );
 }
