@@ -72,6 +72,12 @@ export default function ChatPage() {
   const timer = useRef(null);
   const bodyRef = useRef(null);
   const taRef = useRef(null);
+  // Stick-to-bottom: while set, the well keeps the newest message
+  // pinned fully in view across resizes and late renders. The
+  // well's own scroll handler maintains it (near the bottom =
+  // sticking, scrolled up into history = released); send/resend
+  // set it so the member's own message always lands in view.
+  const stickRef = useRef(true);
   const heroSeen = useRef(false);
   const dictStreamRef = useRef(null);
   const dictRecorderRef = useRef(null);
@@ -89,6 +95,7 @@ export default function ChatPage() {
   // starts over (the page component is reused across chat ids).
   useEffect(() => {
     heroSeen.current = false;
+    stickRef.current = true;
     setHero("show");
     setThread(null);
     setDraft("");
@@ -151,17 +158,42 @@ export default function ChatPage() {
 
   // While SAM is working (or a send is still waiting), keep the
   // thread fresh; the moment it settles, stop polling. The thread
-  // scrolls inside its own well now, so scroll the well, not the page.
+  // scrolls inside its own well now, so scroll the well, not the
+  // page. The pin is instant and only while sticking: the old
+  // unconditional smooth scroll targeted a scrollHeight measured
+  // before any concurrent resize and landed short (and it yanked
+  // a member who had scrolled up to read history on every poll).
   useEffect(() => {
     if (!thread) return;
     const active = thread.turnActive || (thread.queue && thread.queue.length > 0) ||
       thread.messages.some((m) => m.queueStatus === "queued");
     const well = bodyRef.current;
-    if (well) well.scrollTo({ top: well.scrollHeight, behavior: "smooth" });
+    if (well && stickRef.current) well.scrollTop = well.scrollHeight;
     if (!active) return;
     timer.current = setTimeout(() => { load().catch(() => {}); }, 1500);
     return () => { if (timer.current) clearTimeout(timer.current); };
   }, [thread, load]);
+
+  // Late renders move the goalposts: a bubble that arrives by poll,
+  // a font swap, an image-free reflow — any of them grows the
+  // thread content after the pin that was supposed to reveal it.
+  // Watch the well and its content; while sticking, re-pin on any
+  // size change so the newest message's END is what rests above
+  // the composer, never its sliced-off top.
+  useEffect(() => {
+    const well = bodyRef.current;
+    if (!well || typeof ResizeObserver === "undefined") return undefined;
+    let raf = 0;
+    const pin = () => {
+      raf = 0;
+      if (stickRef.current) well.scrollTop = well.scrollHeight;
+    };
+    const queue = () => { if (!raf) raf = requestAnimationFrame(pin); };
+    const ro = new ResizeObserver(queue);
+    ro.observe(well);
+    if (well.firstElementChild) ro.observe(well.firstElementChild);
+    return () => { ro.disconnect(); if (raf) cancelAnimationFrame(raf); };
+  }, [thread]);
 
   // Keyboard geometry (iOS / WKWebView): the chat SHELL tracks
   // the VISUAL viewport through two CSS vars on the root element
@@ -169,73 +201,160 @@ export default function ChatPage() {
   // which .shell.on-chat consumes under 860px: the shell is
   // position:fixed at top var(--vv-t) with height var(--vv-h),
   // so the whole column (header, thread well, composer) is
-  // exactly the area the member can see, in every state.
-  //
-  // This replaces the old lift-the-composer math (2026-11-16,
-  // removed same day): the column stayed layout-viewport height
-  // (100dvh) and the composer was translated up by an overhang
-  // computed from one event's height/offsetTop pair. A real
-  // WKWebView delivers the keyboard transition in pieces (height
-  // and offset arrive on different events, transient heights
-  // mid-animation, no guaranteed final corrective event), so
-  // the zone parked wherever the last event's math put it: in
-  // Dip's report it flew to the top of the screen, over the
-  // header and title, with the dock stranded mid-screen. The
+  // exactly the area the member can see, in every state. The
   // vars are absolute, not cumulative, so any later event
   // self-corrects, and with no transform on the zone nothing
   // can detach.
   //
-  // kb-open (root class, set when the visual viewport is more
-  // than 100px shorter than the layout viewport) hides the dock
-  // and collapses its clearance in the shell's CSS: while the
-  // keyboard is up the composer parks directly above it, with
-  // the approval note under the box and nothing overlapping.
-  // No visualViewport: no vars, the CSS falls back to
-  // top 0 / 100dvh and the layout is exactly the old closed
-  // state. Desktop widths: vars cleared, shell stays in flow.
+  // kb-open (root class) hides the dock and collapses its 98px
+  // clearance in the shell's CSS, so while the keyboard is up
+  // the composer parks at the bottom of the visible band with
+  // nothing of ours between it and the keyboard. The first fix
+  // (2026-11-16) drove kb-open from ONE signal, the delta
+  // innerHeight - vv.height > 100, and Dip's phone disproved it:
+  // in the Muse app's in-app WKWebView the webview FRAME is
+  // resized above the app's URL bar, so the layout and visual
+  // viewports shrink TOGETHER (~844 -> ~455, offsetTop 0), the
+  // delta stays ~0, kb-open never fired, and the dock sat in
+  // the band under the approval note (his screenshot, measured
+  // in sam-review/kbfix2-proof/NOTES.md). kb-open is now set
+  // when ANY of these says the keyboard is up, and cleared only
+  // when ALL are clear:
+  //   1. the composer textarea holds focus (focusin at once,
+  //      focusout after a 250ms grace; activeElement re-checked
+  //      on every apply as a backstop);
+  //   2. vv.height has shrunk >100px below the largest height
+  //      seen while closed (a self-calibrating reference: in a
+  //      frame-resizing webview vv.height absolutely shrinks
+  //      even when the delta cannot see it);
+  //   3. window.innerHeight has shrunk >100px below its own
+  //      closed reference (a webview whose vv is missing or
+  //      lazy while its frame resizes);
+  //   4. the original delta, for pan-style browsers.
+  // References grow only while closed and unfocused, and reset
+  // on orientationchange, so they fit the device and the host
+  // app's chrome instead of a hardcoded height. With no
+  // visualViewport at all, signals 1 and 3 still work and the
+  // CSS falls back to top 0 / 100dvh, the old closed layout.
+  // Desktop widths: vars and class cleared, shell stays in flow.
+  //
+  // The pin after a resize is deliberately NOT in apply()'s own
+  // frame: the first fix assigned scrollTop in the same frame it
+  // changed the vars, against pre-reflow geometry, so the pin
+  // clamped short by exactly the height the well was losing;
+  // and the old smooth-scroll effect targeted a stale maximum
+  // and read as "member scrolled up" to the next apply. Pins
+  // now run in a double-rAF (post-reflow) and again 150/400ms
+  // after any kb-open transition, once the keyboard/frame
+  // animation has settled — always gated on the stick flag.
   useEffect(() => {
-    const vv = window.visualViewport;
-    if (!vv) return undefined;
     const root = document.documentElement;
+    const vv = window.visualViewport || null;
+    const ta = taRef.current;
     let raf = 0;
+    let pinRaf = 0;
+    let blurTimer = 0;
+    let settleTimers = [];
+    let focused = false;
+    let kb = false;
+    let refH = 0;
+    let refInner = 0;
+
+    const pin = () => {
+      const well = bodyRef.current;
+      if (well && stickRef.current) well.scrollTop = well.scrollHeight;
+    };
+    const pinAfterReflow = () => {
+      if (pinRaf) return;
+      pinRaf = requestAnimationFrame(() => {
+        pinRaf = requestAnimationFrame(() => { pinRaf = 0; pin(); });
+      });
+    };
+    const pinSettled = () => {
+      settleTimers.forEach((t) => clearTimeout(t));
+      settleTimers = [setTimeout(pin, 150), setTimeout(pin, 400)];
+    };
+
     const apply = () => {
       raf = 0;
       if (!window.matchMedia("(max-width: 860px)").matches) {
         root.style.removeProperty("--vv-h");
         root.style.removeProperty("--vv-t");
         root.classList.remove("kb-open");
+        kb = false;
         return;
       }
-      // Was the thread riding the bottom BEFORE this resize? Read
-      // with the old geometry still in effect: if the member was
-      // at (or near) the newest message, keep them there after
-      // the column resizes, so the newest message stays visible
-      // above the composer instead of sliding underneath it. A
-      // member scrolled up into history is left alone.
-      const well = bodyRef.current;
-      const wasAtBottom = well
-        ? well.scrollHeight - well.scrollTop - well.clientHeight < 160
-        : false;
-      root.style.setProperty("--vv-h", vv.height + "px");
-      root.style.setProperty("--vv-t", vv.offsetTop + "px");
-      root.classList.toggle("kb-open", window.innerHeight - vv.height > 100);
-      if (well && wasAtBottom) well.scrollTop = well.scrollHeight;
+      if (ta && document.activeElement === ta) focused = true;
+      if (vv) {
+        root.style.setProperty("--vv-h", vv.height + "px");
+        root.style.setProperty("--vv-t", vv.offsetTop + "px");
+      }
+      const vvShrink = !!vv && refH > 0 && refH - vv.height > 100;
+      const innerShrink = refInner > 0 && refInner - window.innerHeight > 100;
+      const delta = !!vv && window.innerHeight - vv.height > 100;
+      const nowKb = !!(focused || vvShrink || innerShrink || delta);
+      if (!nowKb) {
+        if (vv) refH = Math.max(refH, vv.height);
+        refInner = Math.max(refInner, window.innerHeight);
+      }
+      const changed = nowKb !== kb;
+      kb = nowKb;
+      root.classList.toggle("kb-open", kb);
+      pinAfterReflow();
+      if (changed) pinSettled();
     };
     const queue = () => { if (!raf) raf = requestAnimationFrame(apply); };
-    vv.addEventListener("resize", queue);
-    vv.addEventListener("scroll", queue);
+
+    const onFocusIn = () => {
+      if (blurTimer) { clearTimeout(blurTimer); blurTimer = 0; }
+      focused = true;
+      apply();
+    };
+    const onFocusOut = () => {
+      if (blurTimer) clearTimeout(blurTimer);
+      blurTimer = setTimeout(() => { blurTimer = 0; focused = false; apply(); }, 250);
+    };
+    const onOrientation = () => { refH = 0; refInner = 0; queue(); };
+
+    if (vv) {
+      vv.addEventListener("resize", queue);
+      vv.addEventListener("scroll", queue);
+    }
     window.addEventListener("resize", queue);
+    window.addEventListener("orientationchange", onOrientation);
+    if (ta) {
+      ta.addEventListener("focusin", onFocusIn);
+      ta.addEventListener("focusout", onFocusOut);
+    }
     apply();
     return () => {
-      vv.removeEventListener("resize", queue);
-      vv.removeEventListener("scroll", queue);
+      if (vv) {
+        vv.removeEventListener("resize", queue);
+        vv.removeEventListener("scroll", queue);
+      }
       window.removeEventListener("resize", queue);
+      window.removeEventListener("orientationchange", onOrientation);
+      if (ta) {
+        ta.removeEventListener("focusin", onFocusIn);
+        ta.removeEventListener("focusout", onFocusOut);
+      }
       if (raf) cancelAnimationFrame(raf);
+      if (pinRaf) cancelAnimationFrame(pinRaf);
+      if (blurTimer) clearTimeout(blurTimer);
+      settleTimers.forEach((t) => clearTimeout(t));
       root.style.removeProperty("--vv-h");
       root.style.removeProperty("--vv-t");
       root.classList.remove("kb-open");
     };
   }, []);
+
+  // The well reports its own position: riding the bottom keeps
+  // the stick set, scrolling up into history releases it. A
+  // programmatic pin lands at gap 0, so it never releases itself.
+  const onWellScroll = (e) => {
+    const w = e.currentTarget;
+    stickRef.current = w.scrollHeight - w.scrollTop - w.clientHeight <= 48;
+  };
 
   // The composer grows with the draft (one line at rest, up to the
   // CSS cap), so a long assignment never hides behind a tiny box.
@@ -401,6 +520,7 @@ export default function ChatPage() {
     if (e) e.preventDefault();
     const content = draft.trim();
     if (!content || sending) return;
+    stickRef.current = true;
     setSending(true);
     setError("");
     try {
@@ -415,6 +535,7 @@ export default function ChatPage() {
   }
 
   async function resend(queueId) {
+    stickRef.current = true;
     try {
       await api("chats/" + id + "/queue/" + queueId + "/resend", { method: "POST", body: {} });
       await load();
@@ -473,7 +594,7 @@ export default function ChatPage() {
           {error && <div className="notice err chat-error">{error}</div>}
 
           <div className="chat-body-wrap">
-            <div className="chat-body" ref={bodyRef}>
+            <div className="chat-body" ref={bodyRef} onScroll={onWellScroll}>
               {!thread && !error && <p className="chat-opening"><span className="orb" /> Opening the mission file...</p>}
               {thread && started && (
                 <div className="thread chat-thread">

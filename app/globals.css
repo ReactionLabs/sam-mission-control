@@ -623,7 +623,14 @@ a.card:hover { transform: translateY(-3px); border-color: var(--trim); }
 .chat-opening .orb { animation: opening-pulse 1.6s ease-in-out infinite; }
 
 .chat-body-wrap { position: relative; flex: 1; min-height: 0; }
-.chat-body { position: absolute; inset: 0; overflow-y: auto; padding: 8px 2px 18px; }
+/* overflow-anchor: none — the chat page pins this well itself
+   (stick-to-bottom); Chromium's scroll anchoring otherwise
+   re-anchors the well to a chosen message whenever the column
+   resizes for the keyboard and undoes the pin (measured: the
+   well restored to its pre-resize scrollTop, newest message
+   250px under the composer). WKWebView has no anchoring and
+   ignores the property. */
+.chat-body { position: absolute; inset: 0; overflow-y: auto; overflow-anchor: none; padding: 8px 2px 18px; }
 .chat-screen .thread { margin: 0; }
 .chat-screen .msg.assistant { background: var(--chat-panel); border-color: var(--chat-line); color: var(--chat-tx); }
 
