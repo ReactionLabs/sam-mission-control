@@ -470,6 +470,39 @@ h1, h2, h3 { line-height: 1.2; margin: 0 0 12px; }
      98px parks the approval note just above the dock's Talk
      button (measured: ~24px gap, nothing covered). */
   .shell.on-chat .shell-main { padding-bottom: calc(98px + env(safe-area-inset-bottom)); }
+  /* The chat column tracks the VISUAL viewport (keyboard fix,
+     2026-11-16): on chat pages the shell leaves the flow and is
+     sized by the --vv-t / --vv-h vars the chat page maintains
+     from visualViewport (top = offsetTop, height = height).
+     Keyboard closed the vars describe the full screen and
+     nothing changes; keyboard open in a real WKWebView, the
+     layout viewport stays full height while the visual one
+     shrinks and pans, and the column shrinks and rides with
+     it: header pinned at the visual top, the thread well takes
+     the middle, the composer lands at the visual bottom by
+     construction. No vars (no visualViewport API) falls back
+     to top 0 / 100dvh, the pre-fix closed layout. The dock
+     itself is untouched: still fixed to the layout bottom, so
+     it is simply behind the keyboard while it is open. */
+  .shell.on-chat {
+    position: fixed; left: 0; right: 0;
+    top: var(--vv-t, 0px);
+    height: var(--vv-h, 100dvh);
+    /* .shell's min-height: 100vh would otherwise clamp the
+       tracked height back to full screen (found in QA: the top
+       tracked, the height refused to shrink). */
+    min-height: 0;
+  }
+  /* Keyboard open (the chat page sets html.kb-open): the dock
+     leaves the screen (in a real WKWebView it would otherwise
+     ride up into the visible band and cover the approval note;
+     QA band shots showed exactly that overlap) and its 98px
+     clearance collapses, so the composer parks directly above
+     the keyboard with nothing under it. The dock returns the
+     moment the keyboard closes; while visible it is still the
+     same anchored bar, never transformed. */
+  html.kb-open .shell.on-chat .shell-main { padding-bottom: 12px; }
+  html.kb-open .dock { display: none; }
 }
 
 /* App chrome (retired on /app by the shell; kept for any stray use) */
@@ -654,7 +687,7 @@ a.card:hover { transform: translateY(-3px); border-color: var(--trim); }
 
 /* The composer: send lives inside the box, the box rides just
    above the dock, and the reassurance sits directly underneath. */
-.composer-zone { flex: none; padding-top: 10px; will-change: transform; }
+.composer-zone { flex: none; padding-top: 10px; }
 .composer-box {
   display: flex; align-items: flex-end; gap: 8px;
   background: var(--chat-panel); border: 1.5px solid var(--chat-line);

@@ -71,7 +71,6 @@ export default function ChatPage() {
   const [hero, setHero] = useState("show");
   const timer = useRef(null);
   const bodyRef = useRef(null);
-  const zoneRef = useRef(null);
   const taRef = useRef(null);
   const heroSeen = useRef(false);
   const dictStreamRef = useRef(null);
@@ -164,39 +163,77 @@ export default function ChatPage() {
     return () => { if (timer.current) clearTimeout(timer.current); };
   }, [thread, load]);
 
-  // Keyboard geometry (iOS): the composer zone is pinned inside
-  // the chat column, which is sized to the LAYOUT viewport. When
-  // the iPhone keyboard opens, the layout viewport does not
-  // shrink; the VISUAL viewport does, and the keyboard covers the
-  // layout viewport's bottom strip. So measure the zone's bottom
-  // edge in layout coordinates (rect + offsetTop, transform
-  // cleared) and translate the zone up by exactly the amount that
-  // edge overhangs the visual viewport's bottom edge:
-  //   shift = max(0, zoneLayoutBottom - (vv.offsetTop + vv.height))
-  // Keyboard closed the overhang is 0 and nothing moves; keyboard
-  // open the zone parks directly above the keyboard, and the same
-  // math holds if iOS pans the visual viewport while typing.
-  // Mobile widths only; on desktop nothing ever moves.
+  // Keyboard geometry (iOS / WKWebView): the chat SHELL tracks
+  // the VISUAL viewport through two CSS vars on the root element
+  // (--vv-t = visualViewport.offsetTop, --vv-h = its height),
+  // which .shell.on-chat consumes under 860px: the shell is
+  // position:fixed at top var(--vv-t) with height var(--vv-h),
+  // so the whole column (header, thread well, composer) is
+  // exactly the area the member can see, in every state.
+  //
+  // This replaces the old lift-the-composer math (2026-11-16,
+  // removed same day): the column stayed layout-viewport height
+  // (100dvh) and the composer was translated up by an overhang
+  // computed from one event's height/offsetTop pair. A real
+  // WKWebView delivers the keyboard transition in pieces (height
+  // and offset arrive on different events, transient heights
+  // mid-animation, no guaranteed final corrective event), so
+  // the zone parked wherever the last event's math put it: in
+  // Dip's report it flew to the top of the screen, over the
+  // header and title, with the dock stranded mid-screen. The
+  // vars are absolute, not cumulative, so any later event
+  // self-corrects, and with no transform on the zone nothing
+  // can detach.
+  //
+  // kb-open (root class, set when the visual viewport is more
+  // than 100px shorter than the layout viewport) hides the dock
+  // and collapses its clearance in the shell's CSS: while the
+  // keyboard is up the composer parks directly above it, with
+  // the approval note under the box and nothing overlapping.
+  // No visualViewport: no vars, the CSS falls back to
+  // top 0 / 100dvh and the layout is exactly the old closed
+  // state. Desktop widths: vars cleared, shell stays in flow.
   useEffect(() => {
     const vv = window.visualViewport;
-    const zone = zoneRef.current;
-    if (!vv || !zone) return undefined;
+    if (!vv) return undefined;
+    const root = document.documentElement;
+    let raf = 0;
     const apply = () => {
+      raf = 0;
       if (!window.matchMedia("(max-width: 860px)").matches) {
-        zone.style.transform = "";
+        root.style.removeProperty("--vv-h");
+        root.style.removeProperty("--vv-t");
+        root.classList.remove("kb-open");
         return;
       }
-      zone.style.transform = "";
-      const layoutBottom = zone.getBoundingClientRect().bottom + vv.offsetTop;
-      const shift = Math.max(0, layoutBottom - (vv.offsetTop + vv.height));
-      zone.style.transform = shift > 0 ? `translateY(${-shift}px)` : "";
+      // Was the thread riding the bottom BEFORE this resize? Read
+      // with the old geometry still in effect: if the member was
+      // at (or near) the newest message, keep them there after
+      // the column resizes, so the newest message stays visible
+      // above the composer instead of sliding underneath it. A
+      // member scrolled up into history is left alone.
+      const well = bodyRef.current;
+      const wasAtBottom = well
+        ? well.scrollHeight - well.scrollTop - well.clientHeight < 160
+        : false;
+      root.style.setProperty("--vv-h", vv.height + "px");
+      root.style.setProperty("--vv-t", vv.offsetTop + "px");
+      root.classList.toggle("kb-open", window.innerHeight - vv.height > 100);
+      if (well && wasAtBottom) well.scrollTop = well.scrollHeight;
     };
-    vv.addEventListener("resize", apply);
-    vv.addEventListener("scroll", apply);
+    const queue = () => { if (!raf) raf = requestAnimationFrame(apply); };
+    vv.addEventListener("resize", queue);
+    vv.addEventListener("scroll", queue);
+    window.addEventListener("resize", queue);
     apply();
     return () => {
-      vv.removeEventListener("resize", apply);
-      vv.removeEventListener("scroll", apply);
+      vv.removeEventListener("resize", queue);
+      vv.removeEventListener("scroll", queue);
+      window.removeEventListener("resize", queue);
+      if (raf) cancelAnimationFrame(raf);
+      root.style.removeProperty("--vv-h");
+      root.style.removeProperty("--vv-t");
+      root.classList.remove("kb-open");
     };
   }, []);
 
@@ -485,7 +522,7 @@ export default function ChatPage() {
             )}
           </div>
 
-          <div className="composer-zone" ref={zoneRef}>
+          <div className="composer-zone">
             <form className="composer-box" onSubmit={send}>
               <textarea ref={taRef} value={draft} onChange={(e) => { setDraft(e.target.value); if (dictError) setDictError(""); }}
                 placeholder="Give SAM an assignment..." rows={1}
