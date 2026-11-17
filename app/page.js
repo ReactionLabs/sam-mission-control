@@ -65,21 +65,42 @@ function GridHorizon() {
 }
 
 function SpyCar() {
+  // The grand tourer, redrawn 2026-11-16 (same art as the traveler
+  // in GroovyFX): long hood, fastback roofline into a short deck,
+  // arches drawn on the wheel centers so the wheels sit right.
+  const wheel = (cx) => (
+    <g key={cx}>
+      <circle cx={cx} cy="127" r="33" fill="#0B0612" stroke="rgba(255,243,214,.28)" strokeWidth="1.5" />
+      <circle cx={cx} cy="127" r="18" fill="none" stroke="#C9973F" strokeWidth="3.5" />
+      {[0, 60, 120].map((a) => (
+        <line
+          key={a}
+          x1={cx - 15.5 * Math.cos((a * Math.PI) / 180)} y1={127 - 15.5 * Math.sin((a * Math.PI) / 180)}
+          x2={cx + 15.5 * Math.cos((a * Math.PI) / 180)} y2={127 + 15.5 * Math.sin((a * Math.PI) / 180)}
+          stroke="#C9973F" strokeWidth="2"
+        />
+      ))}
+      <circle cx={cx} cy="127" r="5" fill="#C9973F" />
+    </g>
+  );
   return (
-    <svg className="g-car" viewBox="0 0 600 170" aria-hidden="true" focusable="false">
+    <svg className="g-car" viewBox="0 0 640 190" aria-hidden="true" focusable="false">
+      <ellipse cx="325" cy="163" rx="285" ry="7" fill="rgba(10,2,18,.45)" />
       <path
-        d="M18 122 C28 106 72 98 124 93 C172 88 214 58 284 50 C352 43 424 57 474 84 C524 92 566 101 580 113 C589 121 586 133 574 134 L542 134 A27 27 0 0 0 488 134 L182 134 A27 27 0 0 0 128 134 L36 134 C22 134 12 130 18 122 Z"
-        fill="#1B0B26" stroke="rgba(255,243,214,.35)" strokeWidth="1.5"
+        d="M38 148 C34 136 36 120 46 112 C60 103 82 97 106 94 C160 76 230 54 292 50 C318 48 338 50 356 55 C392 63 420 76 440 90 C495 95 555 98 592 103 C608 106 616 114 614 126 C612 138 606 146 596 149 L509 150 A41 41 0 0 1 441 150 L189 150 A41 41 0 0 1 121 150 Z"
+        fill="#170A28"
       />
       <path
-        d="M238 63 C264 54 302 49 332 51 C362 53 392 62 412 77 C362 70 292 69 238 63 Z"
+        d="M138 88 C182 68 242 55 298 54 C326 54 346 57 364 62 C394 70 416 80 432 91 C342 83 232 83 138 88 Z"
         fill="#F5E663" opacity=".85"
       />
-      <circle cx="155" cy="134" r="25" fill="#0D0714" stroke="#C9973F" strokeWidth="3" />
-      <circle cx="155" cy="134" r="9" fill="#C9973F" />
-      <circle cx="515" cy="134" r="25" fill="#0D0714" stroke="#C9973F" strokeWidth="3" />
-      <circle cx="515" cy="134" r="9" fill="#C9973F" />
-      <rect x="566" y="106" width="14" height="6" rx="3" fill="#F5E663" />
+      <path d="M310 54 L324 55 L332 84 L318 84 Z" fill="#170A28" />
+      <path
+        d="M46 112 C60 103 82 97 106 94 C160 76 230 54 292 50 C318 48 338 50 356 55 C392 63 420 76 440 90 C495 95 555 98 592 103 C608 106 616 114 614 126"
+        fill="none" stroke="rgba(240,127,60,.55)" strokeWidth="2.5" strokeLinecap="round"
+      />
+      {wheel(155)}
+      {wheel(475)}
     </svg>
   );
 }
@@ -109,8 +130,6 @@ export default function MarketingPage() {
               </div>
             </div>
           </section>
-
-          <div className="groovy-band" aria-hidden="true" />
 
           {/* ---------- Features ---------- */}
           <section className="g-section" id="features" data-scene="features">
@@ -162,10 +181,9 @@ export default function MarketingPage() {
             </div>
           </section>
 
-          <div className="groovy-band" aria-hidden="true" />
-
           {/* ---------- Business owners ---------- */}
           <section className="g-section" id="owners" data-scene="owners">
+            <div className="g-sideword" aria-hidden="true">Business</div>
             <div className="wrap">
               <div data-reveal>
                 <div className="g-eyebrow">For Business Owners</div>
@@ -262,34 +280,34 @@ export default function MarketingPage() {
             </div>
           </section>
 
-          {/* ---------- Final scene ---------- */}
-          <section className="g-section" data-scene="finale" style={{ paddingTop: 10 }}>
+          {/* ---------- Final scene: the ending is a horizon, not a wall.
+              The sunset scene runs through the footer to the last
+              pixel of the page; the footer hides inside the world,
+              its links quiet pills on the scene itself. ---------- */}
+          <section className="g-ending" data-scene="finale">
+            <div className="g-sun" aria-hidden="true" />
+            <GridHorizon />
+            <SpyCar />
             <div className="wrap">
-              <div className="g-finale" data-reveal>
-                <div className="g-sun" aria-hidden="true" />
-                <GridHorizon />
-                <SpyCar />
+              <div className="g-ending-main" data-reveal>
                 <h2>Old School Cool.<br />New School Intelligence.</h2>
                 <p className="g-sub2">Your mission. His problem.</p>
                 <Link href="/signup" className="btn">Get Started Free</Link>
               </div>
+
+              <footer className="g-footer">
+                <Wordmark size={40} />
+                <p className="g-footer-line">SAM, Secret Agent Man. The AI assistant for the rest of us.</p>
+                <div className="links">
+                  <a href="#features">Features</a>
+                  <a href="#pricing">Pricing</a>
+                  <Link href="/login">Log In</Link>
+                  <Link href="/signup">Get Started</Link>
+                </div>
+              </footer>
             </div>
           </section>
         </main>
-
-        <footer className="g-footer">
-          <div className="wrap">
-            <div className="swirl-band" style={{ marginBottom: 34 }} />
-            <Wordmark size={40} />
-            <p style={{ marginTop: 14 }}>SAM, Secret Agent Man. The AI assistant for the rest of us.</p>
-            <div className="links">
-              <a href="#features">Features</a>
-              <a href="#pricing">Pricing</a>
-              <Link href="/login">Log In</Link>
-              <Link href="/signup">Get Started</Link>
-            </div>
-          </div>
-        </footer>
       </div>
     </div>
   );

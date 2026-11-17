@@ -76,6 +76,7 @@ export default function MissionDemo() {
   const [missionId, setMissionId] = useState(MISSIONS[0].id);
   const [phase, setPhase] = useState(0); // 0 idle, 1..5 steps shown, 6 done
   const [running, setRunning] = useState(false);
+  const [primed, setPrimed] = useState(false); // arrived via the hero button
   const timer = useRef(null);
 
   const mission = MISSIONS.find((m) => m.id === missionId);
@@ -106,6 +107,7 @@ export default function MissionDemo() {
     setMissionId(id);
     setPhase(0);
     setRunning(false);
+    setPrimed(false);
   };
 
   const run = () => {
@@ -113,6 +115,29 @@ export default function MissionDemo() {
     setPhase(1);
     setRunning(true);
   };
+
+  // "Watch SAM in Action" (hero) pays off in one click: the hero
+  // dispatches sam:watch-demo, and the customer-inquiry example
+  // starts running on its own. Reduced motion: the example is
+  // selected and presented at rest with the Run button waiting,
+  // so the payoff is one tap instead of a moving show.
+  useEffect(() => {
+    const start = () => {
+      clear();
+      setMissionId(MISSIONS[0].id);
+      setPrimed(true);
+      if (reduce) {
+        setPhase(0);
+        setRunning(false);
+      } else {
+        setPhase(1);
+        setRunning(true);
+      }
+    };
+    window.addEventListener("sam:watch-demo", start);
+    return () => window.removeEventListener("sam:watch-demo", start);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [reduce]);
 
   const approve = () => {
     if (phase === APPROVAL_STEP) {
@@ -122,7 +147,7 @@ export default function MissionDemo() {
   };
 
   const status =
-    phase === 0 ? "Pick a mission, then run the preview." :
+    phase === 0 ? (primed ? "Your example is loaded. Run the preview when you are ready." : "Pick a mission, then run the preview.") :
     phase === APPROVAL_STEP ? "Waiting for your approval. SAM always stops here." :
     phase >= 6 ? "Mission complete. That is the whole loop." :
     "SAM is working the mission\u2026";
@@ -156,12 +181,15 @@ export default function MissionDemo() {
             const state = phase >= 6 || n < phase ? "done" : n === phase ? "active" : "todo";
             const isApproval = n === APPROVAL_STEP;
             return (
-              <li key={s.title} className={`demo-step demo-step--${state}`}>
+              <li key={s.title} className={`demo-step demo-step--${state}${isApproval ? " demo-step--approval" : ""}`}>
                 <span className="demo-step-dot mono" aria-hidden="true">
                   {state === "done" ? "\u2713" : n}
                 </span>
                 <div>
-                  <h3>{s.title}</h3>
+                  <h3>
+                    {s.title}
+                    {isApproval && state === "active" && <span className="demo-gate-tag">Waiting on you</span>}
+                  </h3>
                   <p>{s.text}</p>
                   {isApproval && state === "active" && (
                     <p className="demo-approve">
@@ -214,7 +242,7 @@ export default function MissionDemo() {
               {phase >= 6 ? "Run it again" : "Run the preview"}
             </button>
           ) : (
-            <button type="button" className="btn ghost demo-stop" onClick={() => { clear(); setPhase(0); setRunning(false); }}>
+            <button type="button" className="btn ghost demo-stop" onClick={() => { clear(); setPhase(0); setRunning(false); setPrimed(false); }}>
               Start over
             </button>
           )}

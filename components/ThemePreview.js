@@ -43,6 +43,7 @@ export default function ThemePreview() {
       </div>
 
       <div className={`tp tp--${theme}`}>
+        <div className="tp-atmo" aria-hidden="true" />
         <motion.div
           key={theme}
           initial={reduce ? false : { opacity: 0.3, rotateY: 7 }}

@@ -71,7 +71,14 @@ export default function HeroSection() {
             </motion.p>
             <motion.p className="g-hero-ctas" variants={fadeUp}>
               <Link href="/signup" className="btn">Get Started Free</Link>
-              <a href="#demo" className="btn ghost" style={{ color: "#FFF3D6", borderColor: "#C9973F" }}>Watch SAM in Action</a>
+              <a
+                href="#demo"
+                className="btn ghost"
+                style={{ color: "#FFF3D6", borderColor: "#C9973F" }}
+                onClick={() => window.dispatchEvent(new CustomEvent("sam:watch-demo"))}
+              >
+                Watch SAM in Action
+              </a>
             </motion.p>
             <motion.p className="small fineprint" variants={fadeUp}>
               Free to start with your own AI key. No card to sign up.
@@ -87,22 +94,26 @@ export default function HeroSection() {
             <LavaLamp />
             <div className="g-hero-frame">
               <img src="/hero.jpg" alt="SAM headquarters: a 1967 mission control room, imagined the way 1967 thought the future would look" fetchPriority="high" />
+              <motion.div
+                className="g-herocard"
+                initial={reduce ? false : { opacity: 0, scale: 0.9, y: 12 }}
+                animate={{ opacity: 1, scale: 1, y: 0 }}
+                transition={{ delay: 0.85, type: "spring", stiffness: 260, damping: 17 }}
+              >
+                <div className="hc-top">
+                  <span className="hc-eyebrow">Mission Control, sample screen</span>
+                  <span className="hc-note">A sample of the home screen. Yours fills with your real work.</span>
+                </div>
+                <div className="hc-row">
+                  <h3>This morning at headquarters</h3>
+                  <ul>
+                    <li><span className="dot" style={{ background: "#2E9E63" }} /> 3 new inquiries, sorted and waiting</li>
+                    <li><span className="dot" style={{ background: "#E8A33D" }} /> 1 quote approval, needs your tap</li>
+                    <li><span className="dot" style={{ background: "#392348" }} /> 2 missions finished yesterday</li>
+                  </ul>
+                </div>
+              </motion.div>
             </div>
-            <motion.div
-              className="g-herocard"
-              initial={reduce ? false : { opacity: 0, scale: 0.82, y: 14 }}
-              animate={{ opacity: 1, scale: 1, y: 0 }}
-              transition={{ delay: 0.85, type: "spring", stiffness: 260, damping: 17 }}
-            >
-              <div className="hc-eyebrow">Mission Control, sample screen</div>
-              <h3>This morning at headquarters</h3>
-              <ul>
-                <li><span className="dot" style={{ background: "#2E9E63" }} /> 3 new inquiries, sorted and waiting</li>
-                <li><span className="dot" style={{ background: "#E8A33D" }} /> 1 quote approval, needs your tap</li>
-                <li><span className="dot" style={{ background: "#392348" }} /> 2 missions finished yesterday</li>
-              </ul>
-              <p className="hc-note">A sample of the home screen. Yours fills with your real work.</p>
-            </motion.div>
           </motion.div>
         </div>
       </div>
