@@ -4,6 +4,7 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import { useParams, useRouter } from "next/navigation";
 import { api, getSession } from "../../../../lib/api";
+import { blobToBase64, createWavRecorder } from "../../../../lib/wav-recorder";
 import AppShell from "../../../../components/AppShell";
 import Mark from "../../../../components/Mark";
 import VoicePanel from "../../../../components/VoicePanel";
@@ -33,6 +34,13 @@ function linkifyArtifacts(content) {
 // fedora that fades away once the conversation starts).
 const CHIPS = ["Check project status", "Draft a follow-up"];
 
+// Dictation auto-stop tuning: speech is a chunk RMS at or above
+// 0.02; once the member has spoken, about 1.8 seconds of quiet
+// below that threshold stops the recording on its own.
+const DICT_SPEECH_THRESHOLD = 0.02;
+const DICT_SILENCE_MS = 1800;
+const DICT_CAP_SECONDS = 120;
+
 function ShieldIcon() {
   return (
     <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor"
@@ -52,6 +60,11 @@ export default function ChatPage() {
   const [error, setError] = useState("");
   const [sending, setSending] = useState(false);
   const [voiceOpen, setVoiceOpen] = useState(false);
+  const [dictPhase, setDictPhase] = useState("idle"); // idle | recording | transcribing
+  const [dictError, setDictError] = useState("");
+  const [dictNote, setDictNote] = useState("");
+  const [dictLevel, setDictLevel] = useState(0);
+  const [dictSeconds, setDictSeconds] = useState(0);
   // Hero lifecycle: "show" on a fresh chat, "leaving" for one fade
   // once the conversation starts, then "gone". A chat that loads
   // already started skips the hero entirely (no flash, no fade).
@@ -61,6 +74,17 @@ export default function ChatPage() {
   const zoneRef = useRef(null);
   const taRef = useRef(null);
   const heroSeen = useRef(false);
+  const dictStreamRef = useRef(null);
+  const dictRecorderRef = useRef(null);
+  const dictTimerRef = useRef(null);
+  const dictCheckRef = useRef(null);
+  const dictHasSpokenRef = useRef(false);
+  const dictLastSpeechRef = useRef(0);
+  const dictStoppingRef = useRef(false);
+  const dictCancelledRef = useRef(false);
+  const dictStartedAtRef = useRef(0);
+  const draftRef = useRef("");
+  useEffect(() => { draftRef.current = draft; }, [draft]);
 
   // A different chat is a different room: the hero lifecycle
   // starts over (the page component is reused across chat ids).
@@ -71,6 +95,11 @@ export default function ChatPage() {
     setDraft("");
     setError("");
     setVoiceOpen(false);
+    setDictPhase("idle");
+    setDictError("");
+    setDictNote("");
+    setDictLevel(0);
+    setDictSeconds(0);
   }, [id]);
 
   // Talk opens the voice call for this chat: the shell's Talk
@@ -180,6 +209,156 @@ export default function ChatPage() {
     ta.style.height = Math.min(ta.scrollHeight, 140) + "px";
   }, []);
   useEffect(() => { grow(); }, [draft, grow]);
+
+  // --- In-chat dictation (mic in the composer) ---
+  // Tap the mic, speak, and the words land as editable text in
+  // the box. Nothing sends until the member hits Send.
+  const clearDictTimers = useCallback(() => {
+    if (dictTimerRef.current) { clearInterval(dictTimerRef.current); dictTimerRef.current = null; }
+    if (dictCheckRef.current) { clearInterval(dictCheckRef.current); dictCheckRef.current = null; }
+  }, []);
+  const stopDictStream = useCallback(() => {
+    try { dictStreamRef.current && dictStreamRef.current.getTracks().forEach((t) => t.stop()); } catch { /* fine */ }
+    dictStreamRef.current = null;
+  }, []);
+  const cleanupDictation = useCallback(() => {
+    dictCancelledRef.current = true;
+    clearDictTimers();
+    dictStoppingRef.current = false;
+    const rec = dictRecorderRef.current;
+    dictRecorderRef.current = null;
+    if (rec) { rec.stop().catch(() => {}); }
+    stopDictStream();
+  }, [clearDictTimers, stopDictStream]);
+
+  // Cleanup on unmount and on chat change.
+  useEffect(() => {
+    dictCancelledRef.current = false;
+    return () => { cleanupDictation(); };
+  }, [id, cleanupDictation]);
+
+  const stopDictation = useCallback(async (reason) => {
+    if (dictStoppingRef.current) return;
+    dictStoppingRef.current = true;
+    clearDictTimers();
+    const isCap = reason === "cap";
+    setDictPhase("transcribing");
+    let blob = null;
+    try { blob = dictRecorderRef.current ? await dictRecorderRef.current.stop() : null; } catch { blob = null; }
+    dictRecorderRef.current = null;
+    stopDictStream();
+    if (dictCancelledRef.current) { dictStoppingRef.current = false; return; }
+    if (!blob || blob.size < 2000) {
+      setDictError("That was too short to hear. Tap the mic and give SAM a full sentence.");
+      setDictNote("");
+      setDictPhase("idle");
+      dictStoppingRef.current = false;
+      return;
+    }
+    try {
+      const audio = await blobToBase64(blob);
+      const res = await api("chats/" + id + "/dictate", {
+        method: "POST",
+        body: { audio, filename: "speech.wav", mime: "audio/wav" },
+      });
+      if (dictCancelledRef.current) { dictStoppingRef.current = false; return; }
+      const transcript = ((res && res.transcript) || "").trim();
+      if (!transcript) {
+        setDictError("SAM could not hear that. Try again.");
+      } else {
+        const base = draftRef.current || "";
+        const trimmedBase = base.replace(/\s+$/, "");
+        const next = trimmedBase ? trimmedBase + " " + transcript : transcript;
+        setDraft(next);
+        draftRef.current = next;
+        if (isCap) setDictNote("That hit the two-minute mark, so SAM stopped listening there. Your words are in the box, ready to edit.");
+        requestAnimationFrame(() => {
+          const ta = taRef.current;
+          if (ta) {
+            ta.focus();
+            try { ta.setSelectionRange(next.length, next.length); } catch { /* fine */ }
+          }
+          grow();
+        });
+      }
+    } catch (err) {
+      if (!dictCancelledRef.current) setDictError(err.message || "SAM could not hear that. Try again.");
+    }
+    setDictPhase("idle");
+    setDictLevel(0);
+    dictStoppingRef.current = false;
+  }, [id, clearDictTimers, stopDictStream, grow]);
+
+  const startDictation = useCallback(async () => {
+    if (dictPhase !== "idle") return;
+    setDictError("");
+    setDictNote("");
+    dictCancelledRef.current = false;
+    let stream = null;
+    try {
+      stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+    } catch {
+      setDictError("The microphone is blocked, so SAM cannot hear you. Allow the microphone for this site in your browser, then tap the mic again.");
+      return;
+    }
+    if (dictCancelledRef.current) {
+      try { stream.getTracks().forEach((t) => t.stop()); } catch { /* fine */ }
+      return;
+    }
+    dictStreamRef.current = stream;
+    dictHasSpokenRef.current = false;
+    dictLastSpeechRef.current = 0;
+    dictStoppingRef.current = false;
+    dictStartedAtRef.current = Date.now();
+    let lastLevelAt = 0;
+    let lastLevelShown = 0;
+    try {
+      dictRecorderRef.current = createWavRecorder(stream, {
+        onLevel: (rms) => {
+          if (rms >= DICT_SPEECH_THRESHOLD) {
+            dictHasSpokenRef.current = true;
+            dictLastSpeechRef.current = Date.now();
+          }
+          // The meter does not need every chunk: throttling the
+          // state update keeps the main thread (and the silence
+          // check riding it) on time.
+          const now = Date.now();
+          if (now - lastLevelAt >= 120 && Math.abs(rms - lastLevelShown) > 0.02) {
+            lastLevelAt = now;
+            lastLevelShown = rms;
+            setDictLevel(rms);
+          }
+        },
+      });
+    } catch {
+      stopDictStream();
+      setDictError("This browser could not start recording.");
+      return;
+    }
+    setDictSeconds(0);
+    setDictLevel(0);
+    setDictPhase("recording");
+    if (dictTimerRef.current) clearInterval(dictTimerRef.current);
+    dictTimerRef.current = setInterval(() => {
+      const elapsed = Math.floor((Date.now() - dictStartedAtRef.current) / 1000);
+      setDictSeconds(elapsed);
+    }, 250);
+    if (dictCheckRef.current) clearInterval(dictCheckRef.current);
+    dictCheckRef.current = setInterval(() => {
+      const elapsedSec = (Date.now() - dictStartedAtRef.current) / 1000;
+      if (elapsedSec >= DICT_CAP_SECONDS) { void stopDictation("cap"); return; }
+      // Auto-stop only after speech: initial silence never stops it.
+      if (dictHasSpokenRef.current && dictLastSpeechRef.current && Date.now() - dictLastSpeechRef.current >= DICT_SILENCE_MS) {
+        void stopDictation("auto");
+      }
+    }, 200);
+  }, [dictPhase, stopDictation, stopDictStream]);
+
+  function onDictButton() {
+    if (dictPhase === "recording") { void stopDictation("manual"); return; }
+    if (dictPhase === "transcribing") return;
+    void startDictation();
+  }
 
   async function send(e) {
     if (e) e.preventDefault();
@@ -308,10 +487,30 @@ export default function ChatPage() {
 
           <div className="composer-zone" ref={zoneRef}>
             <form className="composer-box" onSubmit={send}>
-              <textarea ref={taRef} value={draft} onChange={(e) => setDraft(e.target.value)}
+              <textarea ref={taRef} value={draft} onChange={(e) => { setDraft(e.target.value); if (dictError) setDictError(""); }}
                 placeholder="Give SAM an assignment..." rows={1}
                 aria-label="Give SAM an assignment"
                 onKeyDown={(e) => { if (e.key === "Enter" && !e.shiftKey) { e.preventDefault(); send(); } }} />
+              <button type="button" className={"composer-mic" + (dictPhase === "recording" ? " recording" : "")}
+                onClick={onDictButton} disabled={dictPhase === "transcribing"}
+                aria-label={dictPhase === "recording" ? "Stop dictation" : "Dictate a message"}>
+                {dictPhase === "recording" ? (
+                  <>
+                    <span className="composer-mic-pulse" aria-hidden="true" />
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor" stroke="currentColor"
+                      strokeWidth="1.9" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+                      <rect x="6" y="6" width="12" height="12" rx="2" />
+                    </svg>
+                  </>
+                ) : (
+                  <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                    strokeWidth="1.9" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+                    <path d="M12 3a3 3 0 0 1 3 3v5a3 3 0 0 1 -6 0V6a3 3 0 0 1 3-3 Z" />
+                    <path d="M5 11a7 7 0 0 0 14 0" />
+                    <line x1="12" y1="18" x2="12" y2="21" />
+                  </svg>
+                )}
+              </button>
               <button className="composer-send" type="submit" disabled={sending || !draft.trim()} aria-label="Send">
                 <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor"
                   strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
@@ -320,6 +519,22 @@ export default function ChatPage() {
                 </svg>
               </button>
             </form>
+            {dictPhase === "recording" && (
+              <div className="dict-status" role="status" aria-live="polite">
+                <span className="orb dict-orb" aria-hidden="true" />
+                <span className="dict-clock">{Math.floor(dictSeconds / 60) + ":" + String(dictSeconds % 60).padStart(2, "0")}</span>
+                <span className="dict-meter" aria-hidden="true"><span className="dict-meter-fill" style={{ width: Math.round(Math.min(1, dictLevel * 4) * 100) + "%" }} /></span>
+                <span>Listening - stops on its own when you stop talking</span>
+              </div>
+            )}
+            {dictPhase === "transcribing" && (
+              <div className="dict-status" role="status" aria-live="polite">
+                <span className="orb dict-orb" aria-hidden="true" />
+                <span>Writing it down...</span>
+              </div>
+            )}
+            {dictError && dictPhase === "idle" && <div className="dict-line dict-error">{dictError}</div>}
+            {dictNote && dictPhase === "idle" && <div className="dict-line">{dictNote}</div>}
             <p className="approval-note"><ShieldIcon /> SAM asks before taking actions that require approval.</p>
           </div>
         </div>
