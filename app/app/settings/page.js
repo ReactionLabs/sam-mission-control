@@ -247,6 +247,9 @@ export default function SettingsPage() {
               {member.hasVoiceKey && <button className="btn danger" type="button" disabled={busy === "voice-key"} onClick={removeVoiceKey}>Remove my voice key</button>}
             </div>
           </form>
+          <p className="dim">
+            Dictation is the mic in the message box: it turns what you say into editable text in the box and rides your MiniMax key. Nothing sends until you hit Send.
+          </p>
           <p className="small dim" style={{ marginBottom: 0 }}>
             Voice is for talking. For building and research, type it in the chat and SAM will get to work.
           </p>
